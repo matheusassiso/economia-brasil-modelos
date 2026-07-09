@@ -70,6 +70,7 @@
       <button data-tab="inflacao">Inflação & Plano Real</button>
       <button data-tab="phillips">Curva de Phillips real</button>
       <button data-tab="solow">Solow calibrado</button>
+      <button data-tab="conectado">Curto → Longo (conectado)</button>
       <button data-tab="sobre">Sobre os dados</button>
     </nav>
   </header>
@@ -142,6 +143,22 @@
         <div class="card"><h2>Consumo de estado estacionário × poupança</h2><div id="gSolowGold"></div></div>
       </section>
       <section class="card"><h2>Leitura</h2><p class="prose" id="txtSolow"></p></section>
+    </div>
+
+    <div class="tabpane" id="pane-conectado">
+      <section class="card">
+        <h2>Curto → Médio → Longo prazo, conectados</h2>
+        <p class="prose">Aqui os três horizontes conversam. Um choque de <strong>demanda</strong> (gasto ou consumo) move o produto no curto prazo (IS-LM-BP), mas os preços se ajustam e ele volta à tendência — <strong>efeito zero no longo prazo</strong>. A única ponte para o longo prazo é a <strong>poupança</strong>: se você consome mais e poupa menos, o capital encolhe e o país fica permanentemente mais pobre (Solow). Mexa nos controles e veja os dois efeitos na mesma linha do tempo.</p>
+        <div class="grid2">
+          <div id="ctlConect"></div>
+          <div class="cards" style="grid-template-columns:1fr 1fr 1fr" id="cardsConect"></div>
+        </div>
+      </section>
+      <section class="grid2">
+        <div class="card"><h2>Curto prazo — IS-LM-BP (impacto do choque)</h2><div id="gISLMbr"></div><p class="prose" id="txtISLM"></p></div>
+        <div class="card"><h2>Do curto ao longo prazo — produto no tempo</h2><div id="gTimeline"></div></div>
+      </section>
+      <section class="card"><h2>Por que curto e longo se conectam (ou não)</h2><div class="prose" id="txtConect"></div></section>
     </div>
 
     <div class="tabpane" id="pane-sobre">
@@ -246,6 +263,9 @@
     if(opt.mark!=null){const [mx]=mapPoint(opt.mark,lo,xMin,xMax,lo,hi,W,H,pad);
       svg+=`<line x1="${mx}" y1="${pad.t}" x2="${mx}" y2="${H-pad.b}" stroke="${C.ok}" stroke-width="2" stroke-dasharray="5 4"/>`;
       svg+=`<text x="${mx+4}" y="${pad.t+12}" fill="${C.ok}" font-size="10">${opt.markLabel||""}</text>`;}
+    if(opt.marks)opt.marks.forEach(m=>{const [mx]=mapPoint(m.i,lo,xMin,xMax,lo,hi,W,H,pad);
+      svg+=`<line x1="${mx}" y1="${pad.t}" x2="${mx}" y2="${H-pad.b}" stroke="${m.color||C.muted}" stroke-width="1.4" stroke-dasharray="4 4" stroke-opacity=".7"/>`;
+      svg+=`<text x="${mx+3}" y="${H-pad.b-6}" fill="${m.color||C.muted}" font-size="10">${m.label}</text>`;});
     series.forEach(s=>{const pts=s.vals.map((v,i)=>{if(!Number.isFinite(v))return null;const [sx,sy]=mapPoint(i,clamp(ty(v),lo,hi),xMin,xMax,lo,hi,W,H,pad);return sx.toFixed(1)+","+sy.toFixed(1);}).filter(Boolean);
       svg+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.4"${s.dash?' stroke-dasharray="7 5"':''}/>`;});
     let lx=pad.l+8; series.forEach(s=>{svg+=`<rect x="${lx}" y="${pad.t-3}" width="11" height="4" fill="${s.color}"/><text x="${lx+15}" y="${pad.t+2}" fill="${C.muted}" font-size="11">${s.name}</text>`;lx+=s.name.length*7+34;});
@@ -410,6 +430,93 @@
     document.getElementById("txtSolow").innerHTML=`Com a poupança brasileira (~<span class="tag">${fmt(pSol.s*100,0)}%</span> do PIB), o modelo aponta crescimento de longo prazo de <span class="tag">${fmt((pSol.n+pSol.g)*100,1)}%</span> ao ano (n+g). Nos dados, o IBC-Br cresceu em média <span class="tag">${fmt(crescReal,1)}%</span> ao ano no período recente — na mesma ordem de grandeza. A lição do Solow para o Brasil: como a poupança (s=${fmt(pSol.s,2)}) está <strong>abaixo</strong> da regra de ouro (α=${fmt(pSol.alpha,2)}), poupar e investir mais elevaria a renda de longo prazo — mas exige sacrificar consumo hoje. Tecnologia (g) é o único motor de crescimento sustentado da renda por pessoa.`;
   }
 
+  /* ===== CURTO → LONGO CONECTADO (IS-LM-BP + Solow) ===== */
+  // IS-LM-BP estilizado (calibração Brasil: b=0.7, carga t=0.33). Diagrama qualitativo do impacto.
+  const PISLM={a:0.6,b:0.7,t:0.33,I0:2.5,d:0.5,G:3.0,nx:1.5,mx:0.10,v:0.3,e:1.0,M:8.0,P:1.0,k:0.8,h:1.5,r_f:0.5};
+  const multF_C=p=>1/(1-p.b*(1-p.t)+p.mx);
+  const Abar_C=p=>p.a+p.I0+p.G+p.nx;
+  const IS_rC=(Y,p)=>(Abar_C(p)-p.v*p.e-Y/multF_C(p))/p.d;
+  const LM_rC=(Y,p)=>(p.k*Y-p.M/p.P)/p.h;
+  const BP_rC=(Y,p)=>p.r_f+(p.mx*Y-p.nx+p.v*p.e)/5;
+  function eqISLM_C(p){const al=multF_C(p);const num=(Abar_C(p)-p.v*p.e)/p.d+p.M/(p.P*p.h);const den=1/(al*p.d)+p.k/p.h;const Y=num/den;return{Y,r:LM_rC(Y,p)};}
+  let pConect={dG:2,dGperm:false,dC:0,dT:0,dTsaved:true,rho:0.55,anos:45};
+  function simConect(c){
+    const s0=0.17,alpha=0.45,brk=0.006+0.012+0.04;   // ponytail: s0=0.17 chumbado (~FBCF/PIB do Brasil), puxar série real do BCB se precisar de rigor
+    const mult=multF_C(PISLM);
+    const autShock=c.dG+c.dC-0.7*c.dT;               // choque autônomo de demanda (% PIB); impostos derrubam via PMC
+    const D0=mult*autShock/100;                       // desvio do produto no impacto (fração)
+    // poupança estrutural de longo prazo: consumo e G-sem-financiamento reduzem s; imposto poupado eleva s
+    let s=s0 - c.dC/100 - (c.dGperm?c.dG/100:0) + (c.dTsaved?c.dT/100:0);
+    s=clamp(s,0.02,0.6);
+    const k0=Math.pow(s0/brk,1/(1-alpha));            // economia começa no estado estacionário atual
+    let k=k0,gap=D0; const yPot=[],yAct=[],yBase=[];
+    for(let t=0;t<=c.anos;t++){
+      const pot=100*Math.pow(k/k0,alpha);             // produto potencial destendenciado (base 100)
+      yBase.push(100); yPot.push(pot); yAct.push(pot*(1+gap));
+      k=k+s*Math.pow(k,alpha)-brk*k;                  // Solow: capital acumula com a poupança estrutural
+      gap*=c.rho;                                      // choque de demanda decai (ajuste de médio prazo)
+    }
+    return {yPot,yAct,yBase,D0,s,s0,mult,autShock,longEff:yPot[yPot.length-1]-100};
+  }
+  function gISLM_C(c){
+    const W=520,H=360,pad={t:26,r:18,b:48,l:52},xMin=2,xMax=16,yMin=-0.5,yMax=6;
+    const p0={...PISLM},eq0=eqISLM_C(p0);
+    const autShock=c.dG+c.dC-0.7*c.dT;
+    const p1={...p0,I0:p0.I0+(autShock/100)*eq0.Y};
+    const eq1=eqISLM_C(p1),temChoque=Math.abs(autShock)>1e-6;
+    const path=(fn,st,w,dash)=>{let d="";for(let i=0;i<=200;i++){const Y=xMin+i/200*(xMax-xMin),r=fn(Y);if(r>=yMin&&r<=yMax){const[sx,sy]=mapPoint(Y,r,xMin,xMax,yMin,yMax,W,H,pad);d+=(d?"L":"M")+sx.toFixed(1)+","+sy.toFixed(1);}}return `<path d="${d}" stroke="${st}" stroke-width="${w}" fill="none"${dash?' stroke-dasharray="7 6"':''}/>`;};
+    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes([4,6,8,10,12,14],[0,1,2,3,4,5],xMin,xMax,yMin,yMax,W,H,pad,"produto Y (índice)","juro r (estilizado)");
+    svg+=path(Y=>IS_rC(Y,p0),C.selic,3)+path(Y=>LM_rC(Y,p0),C.ibc,3)+path(Y=>BP_rC(Y,p0),C.divida,2.4);
+    if(temChoque)svg+=path(Y=>IS_rC(Y,p1),C.warn,2.4,true);
+    const e0=mapPoint(eq0.Y,eq0.r,xMin,xMax,yMin,yMax,W,H,pad),e1=mapPoint(eq1.Y,eq1.r,xMin,xMax,yMin,yMax,W,H,pad);
+    svg+=`<circle cx="${e0[0]}" cy="${e0[1]}" r="5.5" fill="${C.EQ}"/><text x="${e0[0]+8}" y="${e0[1]-8}" fill="${C.EQ}" font-size="11">E0</text>`;
+    if(temChoque)svg+=`<circle cx="${e1[0]}" cy="${e1[1]}" r="5.5" fill="${C.warn}"/><text x="${e1[0]+8}" y="${e1[1]-8}" fill="${C.warn}" font-size="11">E1</text>`;
+    svg+=`<text x="70" y="42" fill="${C.selic}" font-size="12">IS</text><text x="100" y="42" fill="${C.ibc}" font-size="12">LM</text><text x="132" y="42" fill="${C.divida}" font-size="12">BP</text>`;
+    return svg+`</svg>`;
+  }
+  function buildConectCtl(){
+    const el=document.getElementById("ctlConect");
+    el.innerHTML=`
+     <label class="ctl"><span><small>Gasto público ΔG (% do PIB)</small><input type="range" data-k="dG" min="-4" max="8" step="0.5" value="${pConect.dG}"></span><input type="number" data-n="dG" min="-4" max="8" step="0.5" value="${pConect.dG}"></label>
+     <label style="display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;margin:2px 0 10px"><input type="checkbox" data-c="dGperm" ${pConect.dGperm?"checked":""}> ΔG permanente e não financiado (reduz a poupança nacional)</label>
+     <label class="ctl"><span><small>Aumento estrutural do consumo (% do PIB) — reduz a poupança</small><input type="range" data-k="dC" min="0" max="8" step="0.5" value="${pConect.dC}"></span><input type="number" data-n="dC" min="0" max="8" step="0.5" value="${pConect.dC}"></label>
+     <label class="ctl"><span><small>Variação de impostos ΔT (% do PIB)</small><input type="range" data-k="dT" min="-4" max="8" step="0.5" value="${pConect.dT}"></span><input type="number" data-n="dT" min="-4" max="8" step="0.5" value="${pConect.dT}"></label>
+     <label style="display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;margin:2px 0 10px"><input type="checkbox" data-c="dTsaved" ${pConect.dTsaved?"checked":""}> impostos viram poupança pública (elevam s no longo prazo)</label>
+     <label class="ctl"><span><small>Persistência do ajuste ρ (mais alto = médio prazo mais lento)</small><input type="range" data-k="rho" min="0.1" max="0.9" step="0.05" value="${pConect.rho}"></span><input type="number" data-n="rho" min="0.1" max="0.9" step="0.05" value="${pConect.rho}"></label>
+     <label class="ctl"><span><small>Horizonte (anos)</small><input type="range" data-k="anos" min="10" max="60" step="1" value="${pConect.anos}"></span><input type="number" data-n="anos" min="10" max="60" step="1" value="${pConect.anos}"></label>
+     <div class="chips"><button id="cxTemp">Exemplo: expansão fiscal temporária</button><button id="cxConsumo">Exemplo: consumir mais, poupar menos</button></div>`;
+    el.querySelectorAll("input[type=range],input[type=number]").forEach(inp=>inp.addEventListener("input",e=>{
+      const k=e.target.dataset.k||e.target.dataset.n,v=+e.target.value;if(!Number.isFinite(v))return;pConect[k]=v;
+      el.querySelectorAll(`[data-k="${k}"],[data-n="${k}"]`).forEach(x=>{if(x!==e.target)x.value=v;});renderConect();}));
+    el.querySelectorAll("input[type=checkbox]").forEach(inp=>inp.addEventListener("change",e=>{pConect[e.target.dataset.c]=e.target.checked;renderConect();}));
+    document.getElementById("cxTemp").addEventListener("click",()=>{pConect={dG:3,dGperm:false,dC:0,dT:0,dTsaved:true,rho:0.55,anos:45};buildConectCtl();renderConect();});
+    document.getElementById("cxConsumo").addEventListener("click",()=>{pConect={dG:0,dGperm:false,dC:4,dT:0,dTsaved:true,rho:0.55,anos:45};buildConectCtl();renderConect();});
+  }
+  function renderConect(){
+    const r=simConect(pConect);
+    document.getElementById("gISLMbr").innerHTML=gISLM_C(pConect);
+    document.getElementById("txtISLM").innerHTML=`No impacto, o choque de demanda de <span class="tag">${fmt(r.autShock,1)}% do PIB</span> desloca a IS e leva o produto de E0 a E1 (multiplicador ≈ ${fmt(r.mult,2)}). Preços fixos: quem manda é a demanda.`;
+    document.getElementById("gTimeline").innerHTML=lineChart(
+      [{name:"produto efetivo",color:C.warn,vals:r.yAct},
+       {name:"potencial (Solow)",color:C.ibc,vals:r.yPot},
+       {name:"tendência sem choque",color:C.muted,vals:r.yBase,dash:true}],
+      null,{ylabel:"produto (índice, base 100)",xlabel:"anos",W:640,H:360,
+        marks:[{i:2,label:"curto",color:C.selic},{i:8,label:"médio → longo",color:C.gold}]});
+    const neutro=Math.abs(r.longEff)<0.05;
+    const corLong=neutro?C.muted:(r.longEff<0?C.warn:C.ibc);
+    const cards=[
+      ["Curto prazo (impacto)",(r.D0>=0?"+":"")+fmt(r.D0*100,1)+"%",C.warn,"desvio do produto no ano 0"],
+      ["Longo prazo (nível)",(r.longEff>=0?"+":"")+fmt(r.longEff,1)+"%",corLong,neutro?"≈ zero: só demanda":"permanente, via poupança"],
+      ["Poupança de longo prazo",fmt(r.s*100,1)+"%",C.gold,`vs. ${fmt(r.s0*100,0)}% inicial`]
+    ];
+    document.getElementById("cardsConect").innerHTML=cards.map(([t,v,cor,s])=>`<div class="metric" style="border-left-color:${cor}"><span>${t}</span><strong style="color:${cor}">${v}</strong><span class="sub">${s}</span></div>`).join("");
+    let corpo=`<p><strong>A regra:</strong> um choque puramente de <em>demanda</em> move o produto no curto prazo, mas os preços se ajustam e ele volta à tendência — <strong>efeito zero no longo prazo</strong>. A única ponte para o longo prazo é a <strong>taxa de poupança</strong>, que fixa o capital e a renda de estado estacionário no Solow.</p>`;
+    if(neutro) corpo+=`<p>Seu cenário é essencialmente de demanda: o produto varia ${fmt(r.D0*100,1)}% hoje e retorna à tendência. Longo prazo praticamente inalterado — a poupança segue em ${fmt(r.s*100,1)}%.</p>`;
+    else if(r.longEff<0) corpo+=`<p><strong>Consumir mais, poupar menos:</strong> o produto <em>sobe</em> ${fmt(r.D0*100,1)}% no curto prazo (a festa da demanda), mas a poupança cai para ${fmt(r.s*100,1)}% do PIB, o capital por trabalhador encolhe e o produto de longo prazo fica <strong>${fmt(r.longEff,1)}%</strong> abaixo. É o paradoxo que você queria ver: mais consumo hoje, país mais pobre amanhã.</p>`;
+    else corpo+=`<p><strong>Seu cenário eleva a poupança</strong> (${fmt(r.s0*100,0)}% → ${fmt(r.s*100,1)}%): pode custar demanda no curto prazo, mas eleva o capital e a renda de longo prazo em <strong>+${fmt(r.longEff,1)}%</strong>. É o trade-off do investimento/austeridade — dói agora, paga depois.</p>`;
+    document.getElementById("txtConect").innerHTML=corpo;
+  }
+
   /* ===== SOBRE ===== */
   document.getElementById("sobreBody").innerHTML=`
     <h2>De onde vêm os números</h2>
@@ -434,6 +541,7 @@
     else if(t==="inflacao")renderInflacao();
     else if(t==="phillips")renderPhillips();
     else if(t==="solow"){if(!feito.solow){buildSolCtl();feito.solow=1;}renderSolow();}
+    else if(t==="conectado"){if(!feito.conect){buildConectCtl();feito.conect=1;}renderConect();}
   }
   document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{
     document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("active"));
@@ -463,6 +571,11 @@
     const ks=kstar(p); console.assert(Math.abs(p.s*f(ks,p)-brk(p)*ks)<1e-9,"Solow k* deve zerar k̇");
     const t=ols([{x:1,y:2},{x:2,y:4},{x:3,y:6}]); console.assert(Math.abs(t.b-2)<1e-9&&Math.abs(t.r2-1)<1e-9,"OLS exato em reta perfeita");
     console.assert(parseSGS([{data:"01/05/2026",valor:"1.5"},{data:"15/05/2026",valor:"2.5"}],true).vals[0]===2.5,"decimação diária pega último do mês");
+    // modelo conectado: choque temporário de demanda não muda o longo prazo; consumir mais empobrece no longo
+    const tmp=simConect({dG:3,dGperm:false,dC:0,dT:0,dTsaved:true,rho:0.55,anos:45});
+    console.assert(Math.abs(tmp.longEff)<0.02,"choque temporário de demanda: efeito ~0 no longo prazo");
+    const con=simConect({dG:0,dGperm:false,dC:4,dT:0,dTsaved:true,rho:0.55,anos:45});
+    console.assert(con.D0>0 && con.longEff<-1,"consumir mais: sobe no curto, cai no longo");
   })();
   </script>
 </body>

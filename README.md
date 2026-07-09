@@ -16,6 +16,8 @@ Clica e usa direto no navegador — funciona no celular também.
 
 **Solow calibrado** — o modelo de crescimento com parâmetros do Brasil (poupança baixa, participação do capital alta). Compara o crescimento de longo prazo do modelo com o crescimento real do IBC-Br. Botões para calibrar com valores do Brasil e para a regra de ouro.
 
+**Curto → Longo (conectado)** — os três prazos ligados numa só linha do tempo. O IS-LM-BP dá o impacto de curto prazo de um choque de demanda; o Solow dá o longo prazo. A ponte é a **poupança**: um choque só de demanda volta à tendência (efeito zero no longo prazo), mas consumir mais e poupar menos encolhe o capital e empobrece o país de forma permanente. Mostra o paradoxo "boom hoje, mais pobre amanhã" e o trade-off da austeridade.
+
 **Sobre os dados** — todas as séries SGS usadas, com código e fonte.
 
 ## Fonte dos dados
