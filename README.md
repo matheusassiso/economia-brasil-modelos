@@ -2,7 +2,9 @@
 
 Dashboard **de arquivo único** que puxa as séries oficiais do Brasil **ao vivo** (API pública do Banco Central e IBGE) e as liga aos modelos de macroeconomia. Se cair a internet, usa um **snapshot embutido** — funciona offline do mesmo jeito.
 
-### ▶ Abrir: **(publique no GitHub Pages — link aparece aqui depois do deploy)**
+### ▶ Abrir agora: **https://matheusassiso.github.io/economia-brasil-modelos/**
+
+Clica e usa direto no navegador — funciona no celular também.
 
 ## O que tem
 
