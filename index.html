@@ -3,731 +3,243 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Economia Brasileira: Dados Reais e Modelos</title>
+  <title>Solow — Crescimento de Longo Prazo do Brasil (dados reais)</title>
   <style>
-    :root{
-      --bg:#0f1729;--panel:#141e32;--panel2:#0a1020;--border:#1e2d4a;
-      --text:#e8eff8;--muted:#8ba2c4;--dim:#5a7399;
-      --selic:#4a9eff;--ipca:#f87171;--dolar:#2ecaac;--desemp:#fbbf24;
-      --divida:#a78bfa;--base:#f472b6;--ibc:#34d399;--gold:#fbbf24;
-      --ok:#22c55e;--warn:#fb7185;--live:#22c55e;--offline:#fbbf24;
-    }
+    :root{--bg:#0f1729;--panel2:#0a1020;--border:#1e2d4a;--text:#e8eff8;--muted:#8ba2c4;--dim:#5a7399;
+      --k:#38bdf8;--y:#4a9eff;--c:#34d399;--inv:#f5a623;--gold:#fbbf24;--warn:#fb7185;--ok:#22c55e;}
     *{box-sizing:border-box}
     body{margin:0;color:var(--text);background:radial-gradient(circle at top left,#1b2a4a 0,var(--bg) 36%,#070b14 100%);font-family:Segoe UI,Arial,Helvetica,sans-serif}
-    header{padding:18px 26px 12px;border-bottom:1px solid var(--border);background:rgba(10,16,32,.85);position:sticky;top:0;z-index:20;backdrop-filter:blur(10px)}
+    header{padding:20px 26px 14px;border-bottom:1px solid var(--border);background:rgba(10,16,32,.85)}
     h1{margin:0 0 5px;font-size:23px}
-    .subtitle{margin:0;color:var(--muted);font-size:13px;line-height:1.45}
-    .statusbar{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+    .subtitle{margin:0;color:var(--muted);font-size:13.5px;line-height:1.45;max-width:820px}
+    .statusbar{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
     .badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:999px;border:1px solid var(--border);background:var(--panel2)}
     .dot{width:9px;height:9px;border-radius:50%}
-    .dot.live{background:var(--live);box-shadow:0 0 8px var(--live)}
-    .dot.offline{background:var(--offline)}
-    nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-    nav.tabs button{width:auto;background:var(--panel2);color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:8px 15px;font-weight:700;font-size:13px;cursor:pointer}
-    nav.tabs button.active{background:var(--selic);color:#fff;border-color:var(--selic)}
-    main{max-width:1500px;margin:0 auto;padding:18px}
-    .tabpane{display:none}.tabpane.active{display:block}
+    .dot.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}.dot.offline{background:var(--gold)}
+    .layout{display:grid;grid-template-columns:330px 1fr;gap:18px;padding:18px;max-width:1400px;margin:0 auto}
+    aside{background:rgba(20,30,50,.96);border:1px solid var(--border);border-radius:8px;padding:16px;align-self:start;position:sticky;top:16px}
+    main{min-width:0}
     .card{background:rgba(20,30,50,.94);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
-    h2{font-size:18px;margin:0 0 10px}h3{font-size:14.5px;margin:0 0 8px}
-    .cards{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:12px;margin-bottom:16px}
-    .metric{background:rgba(10,16,32,.96);border:1px solid var(--border);border-radius:8px;padding:13px;min-height:96px;border-left:3px solid var(--selic)}
+    h2{font-size:18px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px;color:var(--muted)}
+    .cards{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+    .metric{background:rgba(10,16,32,.96);border:1px solid var(--border);border-radius:8px;padding:13px;min-height:94px;border-left:3px solid var(--y)}
     .metric span{display:block;color:var(--muted);font-size:12px;line-height:1.3}
-    .metric strong{display:block;font-family:Consolas,monospace;font-size:22px;margin-top:6px}
+    .metric strong{display:block;font-family:Consolas,monospace;font-size:21px;margin-top:6px}
     .metric .sub{font-size:11px;margin-top:5px}
     .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
     svg{width:100%;height:auto;display:block;background:var(--panel2);border:1px solid var(--border);border-radius:8px}
+    label.ctl{display:grid;grid-template-columns:1fr 82px;gap:10px;align-items:center;margin:11px 0}
+    .ctl small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
+    .ctl input[type=range]{width:100%;accent-color:var(--y)}
+    .ctl input[type=number]{width:100%;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:13px}
+    button{width:100%;background:var(--y);color:#fff;border:0;border-radius:6px;padding:10px 12px;font-weight:700;cursor:pointer;margin-top:8px}
+    button.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
     .prose{color:#cfe0f4;line-height:1.6;font-size:14px}.prose p{margin:8px 0}
     .tag{font-family:Consolas,monospace;color:var(--gold)}
-    label.ctl{display:grid;grid-template-columns:1fr 84px;gap:10px;align-items:center;margin:10px 0}
-    .ctl small{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}
-    .ctl input[type=range]{width:100%;accent-color:var(--selic)}
-    .ctl input[type=number]{width:100%;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:13px}
-    button.act{width:auto;background:var(--selic);color:#fff;border:0;border-radius:6px;padding:9px 14px;font-weight:700;cursor:pointer}
-    button.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
-    .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-    .chips button{width:auto;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:6px 11px;border-radius:999px;cursor:pointer}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th,td{border-bottom:1px solid var(--border);padding:7px;text-align:left}
-    th{background:var(--panel2)}
-    .note{border:1px solid #2a416c;background:#0b1529;color:var(--muted);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.45;margin:10px 0}
-    .plano{border:1px solid var(--ok);background:#0c2318;color:#c8f7dd;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5;margin:10px 0}
-    .footer{color:var(--dim);font-size:12px;line-height:1.5;padding:10px 2px 30px}
+    .note{border:1px solid #2a416c;background:#0b1529;color:var(--muted);border-radius:8px;padding:10px 12px;font-size:12.5px;line-height:1.5;margin:10px 0}
+    ul{padding-left:18px;line-height:1.55;color:var(--muted)}
+    .footer{color:var(--dim);font-size:12px;line-height:1.55;padding:6px 2px 26px}
     .footer code{color:var(--muted)}
-    .cards.five{grid-template-columns:repeat(5,minmax(120px,1fr))}
-    .simlayout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
-    select#choqueIM{width:100%;color:var(--text);background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:9px;font-size:13px;margin:6px 0 10px}
-    details{border-top:1px solid var(--border);padding:10px 0}
-    details summary{cursor:pointer;font-weight:700;margin-bottom:6px}
-    @media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}.cards.five{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.simlayout{grid-template-columns:1fr}}
-    @media(max-width:640px){.cards{grid-template-columns:1fr}header{position:static}}
+    @media(max-width:980px){.layout{grid-template-columns:1fr}aside{position:static}.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+    @media(max-width:560px){.cards{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <header>
-    <h1>Economia Brasileira: Dados Reais e Modelos</h1>
-    <p class="subtitle">Séries oficiais do Banco Central e IBGE ao vivo, com backup offline, ligadas aos modelos de macroeconomia. IPCA, Selic, câmbio, dívida, desemprego — e a hiperinflação real de 1990 comparada ao modelo de Cagan.</p>
+    <h1>Solow — Crescimento de Longo Prazo do Brasil</h1>
+    <p class="subtitle">O modelo de Solow calibrado com o investimento real do Brasil. A taxa de poupança/investimento (s) vem da Formação Bruta de Capital Fixo publicada pelo Banco Central, ao vivo. Ajuste os parâmetros e veja a economia convergir ao estado estacionário.</p>
     <div class="statusbar">
       <span class="badge" id="statusFonte"><span class="dot offline"></span> carregando dados…</span>
-      <button class="act ghost" id="btnAtualizar" style="padding:5px 12px;font-size:12px">Atualizar</button>
+      <button id="btnAtualizar" class="ghost" style="width:auto;padding:5px 12px;font-size:12px;margin:0">Atualizar</button>
     </div>
-    <nav class="tabs" id="tabs">
-      <button data-tab="painel" class="active">Painel Brasil</button>
-      <button data-tab="islm">IS-LM-BP &amp; DA-OA</button>
-      <button data-tab="inflacao">Inflação & Plano Real</button>
-      <button data-tab="phillips">Curva de Phillips real</button>
-      <button data-tab="solow">Solow calibrado</button>
-      <button data-tab="conectado">Curto → Longo (conectado)</button>
-      <button data-tab="sobre">Sobre os dados</button>
-    </nav>
   </header>
 
-  <main>
-    <div class="tabpane active" id="pane-painel">
-      <section class="cards" id="cardsPainel"></section>
+  <div class="layout">
+    <aside>
+      <h2>Parâmetros</h2>
+      <div class="note" id="notaS"></div>
+      <div id="ctl"></div>
+      <button id="btnReal" class="ghost">Usar a taxa de investimento real do Brasil</button>
+      <button id="btnGold" class="ghost">Regra de ouro (s = α)</button>
+    </aside>
+    <main>
+      <section class="cards" id="cards"></section>
       <section class="grid2">
-        <div class="card"><h2>Juros (Selic) × Inflação (IPCA 12m)</h2><div id="gJurosInf"></div>
-          <p class="prose" id="txtJurosInf"></p></div>
-        <div class="card"><h2>Câmbio — R$ por US$</h2><div id="gDolar"></div></div>
-      </section>
-      <section class="grid2">
-        <div class="card"><h2>Desemprego (PNAD Contínua)</h2><div id="gDesemp"></div></div>
-        <div class="card"><h2>Dívida bruta do governo geral (% do PIB)</h2><div id="gDivida"></div></div>
-      </section>
-      <section class="card"><h2>Atividade — IBC-Br (proxy mensal do PIB)</h2><div id="gIbc"></div></section>
-    </div>
-
-    <div class="tabpane" id="pane-islm">
-      <section class="card">
-        <h2>Simulador IS-LM-BP e DA-OA — choques de curto e médio prazo</h2>
-        <p class="prose">Escolha um choque de política e mexa nos parâmetros. No <strong>curto prazo</strong> (IS-LM-BP) os preços são fixos e o produto é determinado pela demanda; no <strong>médio prazo</strong> (DA-OA / Phillips) os preços se ajustam e o produto volta ao natural. Veja a trajetória de ajuste no tempo.</p>
-        <div class="simlayout">
-          <div>
-            <label for="choqueIM"><strong>Choque do cenário</strong></label>
-            <select id="choqueIM"></select>
-            <button id="restIM" class="act ghost" style="margin-bottom:10px">Restaurar padrões</button>
-            <div id="ctlIM"></div>
-          </div>
-          <div>
-            <div class="cards five" id="metIM"></div>
-            <div class="grid2">
-              <div class="card"><h2>IS-LM-BP (curto prazo)</h2><div id="gISLMim"></div></div>
-              <div class="card"><h2>Demanda e Oferta Agregada</h2><div id="gOADAim"></div></div>
-            </div>
-            <div class="grid2">
-              <div class="card"><h2>Ajuste no tempo: produto Y</h2><div id="gYtim"></div></div>
-              <div class="card"><h2>Ajuste no tempo: inflação π e preços P</h2><div id="gPitim"></div></div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section class="card"><h2>Multiplicadores calculados</h2><table id="tabMultIM"></table></section>
-    </div>
-
-    <div class="tabpane" id="pane-inflacao">
-      <section class="card">
-        <h2>A hiperinflação brasileira e o Plano Real</h2>
-        <p class="prose">Inflação mensal pelo IGP-DI (série 190 do BCB, desde 1989). Antes de julho de 1994 os preços subiam <strong>dezenas de por cento por mês</strong>. O <strong>Plano Real</strong> (jul/1994) trocou a moeda e ancorou as contas — a inflação despencou de um mês para o outro.</p>
-        <div class="chips">
-          <button data-inf="hiper">Foco: 1989–1996 (hiperinflação)</button>
-          <button data-inf="tudo">Série completa 1989–hoje</button>
-          <button data-inf="moderna">Só a era moderna (2000+)</button>
-        </div>
-        <div id="gInfHist"></div>
-        <div class="plano" id="planoBox"></div>
-      </section>
-      <section class="card">
-        <h2>Realidade × modelo de Cagan</h2>
-        <p class="prose">O modelo de Cagan prevê que, com o governo imprimindo cada vez mais e a fuga da moeda, a inflação <strong>explode sem parar</strong>. A linha tracejada mostra essa trajetória hipotética a partir de 1994. A realidade (linha cheia) só divergiu porque houve <strong>reforma monetária</strong> — o modelo não "erra": ele mostra o que teria acontecido sem o Plano Real.</p>
-        <div id="gCagan"></div>
-      </section>
-    </div>
-
-    <div class="tabpane" id="pane-phillips">
-      <section class="card">
-        <h2>Curva de Phillips com dados brasileiros</h2>
-        <p class="prose">Cada ponto é um mês (2014–hoje): desemprego no eixo horizontal, inflação (IPCA 12m) no vertical. A teoria prevê inclinação negativa (mais desemprego → menos inflação). A reta é o ajuste por mínimos quadrados sobre os dados reais.</p>
-        <div class="grid2">
-          <div id="gPhillips"></div>
-          <div>
-            <div class="cards" style="grid-template-columns:1fr 1fr" id="cardsPhillips"></div>
-            <p class="prose" id="txtPhillips"></p>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <div class="tabpane" id="pane-solow">
-      <section class="card">
-        <h2>Modelo de Solow calibrado para o Brasil</h2>
-        <p class="prose">Ajuste os parâmetros e veja o estado estacionário. Os valores iniciais aproximam o Brasil: baixa poupança, participação do capital alta, crescimento populacional baixo. A poupança é a chave — o Brasil poupa pouco, então o capital por trabalhador (e a renda) estaciona num nível baixo.</p>
-        <div class="chips">
-          <button id="btnCalibra">Calibrar com valores do Brasil</button>
-          <button id="btnGolden" class="ghost">Poupança da regra de ouro (s = α)</button>
-        </div>
-        <div class="grid2" style="margin-top:12px">
-          <div id="ctlSolow"></div>
-          <div>
-            <div class="cards" style="grid-template-columns:1fr 1fr" id="cardsSolow"></div>
-          </div>
-        </div>
+        <div class="card"><h2>Diagrama de fase: investimento × depreciação</h2><div id="gFase"></div></div>
+        <div class="card"><h2>Convergência de k, y e c no tempo</h2><div id="gTempo"></div></div>
       </section>
       <section class="grid2">
-        <div class="card"><h2>Convergência de k, y e c</h2><div id="gSolow"></div></div>
-        <div class="card"><h2>Consumo de estado estacionário × poupança</h2><div id="gSolowGold"></div></div>
+        <div class="card"><h2>Consumo de estado estacionário × poupança</h2><div id="gGold"></div></div>
+        <div class="card"><h2>Investimento real do Brasil — FBCF (BCB, série 22102)</h2><div id="gFBCF"></div></div>
       </section>
-      <section class="card"><h2>Leitura</h2><p class="prose" id="txtSolow"></p></section>
-    </div>
-
-    <div class="tabpane" id="pane-conectado">
-      <section class="card">
-        <h2>Curto → Médio → Longo prazo, conectados</h2>
-        <p class="prose">Aqui os três horizontes conversam. Um choque de <strong>demanda</strong> (gasto ou consumo) move o produto no curto prazo (IS-LM-BP), mas os preços se ajustam e ele volta à tendência — <strong>efeito zero no longo prazo</strong>. A única ponte para o longo prazo é a <strong>poupança</strong>: se você consome mais e poupa menos, o capital encolhe e o país fica permanentemente mais pobre (Solow). Mexa nos controles e veja os dois efeitos na mesma linha do tempo.</p>
-        <div class="grid2">
-          <div id="ctlConect"></div>
-          <div class="cards" style="grid-template-columns:1fr 1fr 1fr" id="cardsConect"></div>
-        </div>
+      <section class="card"><h2>Leitura</h2><div class="prose" id="leitura"></div></section>
+      <section class="card prose">
+        <h2>Sobre os dados</h2>
+        <p>A <strong>taxa de investimento</strong> (s) é estimada a partir da <strong>Formação Bruta de Capital Fixo</strong> — índice de volume, série <code>22102</code> do SGS/Banco Central, puxada ao vivo (com backup offline). O BCB não publica a razão FBCF/PIB como série pronta; por isso o índice real é ancorado na taxa média de investimento do Brasil (~17,5% do PIB, IBGE/Contas Nacionais), preservando as variações reais.</p>
+        <p>O crescimento é comparado com o <strong>IBC-Br</strong> (série <code>24364</code>), proxy mensal do PIB. Material educativo — não é recomendação de investimento.</p>
       </section>
-      <section class="grid2">
-        <div class="card"><h2>Curto prazo — IS-LM-BP (impacto do choque)</h2><div id="gISLMbr"></div><p class="prose" id="txtISLM"></p></div>
-        <div class="card"><h2>Do curto ao longo prazo — produto no tempo</h2><div id="gTimeline"></div></div>
-      </section>
-      <section class="card"><h2>Por que curto e longo se conectam (ou não)</h2><div class="prose" id="txtConect"></div></section>
-    </div>
-
-    <div class="tabpane" id="pane-sobre">
-      <section class="card prose" id="sobreBody"></section>
-    </div>
-
-    <div class="footer">
-      Arquivo único, funciona offline com o último snapshot embutido. Dados ao vivo via API pública SGS do Banco Central do Brasil e PNAD/IBGE. Este é um material educativo — não é recomendação de investimento.
-    </div>
-  </main>
+      <div class="footer">Arquivo único, funciona offline com o snapshot embutido. Dados ao vivo via API pública SGS do Banco Central.</div>
+    </main>
+  </div>
 
   <script>
   "use strict";
   const C={text:"#E8EFF8",muted:"#8BA2C4",grid:"#1A2840",axis:"#3B4E6D",
-    selic:"#4A9EFF",ipca:"#F87171",dolar:"#2ECAAC",desemp:"#FBBF24",divida:"#A78BFA",
-    base:"#F472B6",ibc:"#34D399",gold:"#FBBF24",ok:"#22C55E",warn:"#FB7185",EQ:"#FFFFFF"};
+    k:"#38BDF8",y:"#4A9EFF",c:"#34D399",inv:"#F5A623",gold:"#FBBF24",warn:"#FB7185",ok:"#22C55E",EQ:"#FFFFFF"};
   const fmt=(x,n=2)=>Number.isFinite(x)?x.toFixed(n):"n/a";
   const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 
-  /* ===== dados: SGS + snapshot embutido (backup offline) ===== */
-  const SGS={ipca12:13522,ipcaMes:433,selic:432,dolar:3698,dividaPib:13762,desemprego:24369,ibcbr:24364,baseMon:1785,infHist:190};
-  const DAILY=new Set(["selic"]);          // séries diárias: janela máx. 10 anos
-  const DI_LONGA="01/01/1989";             // infHist
-  const DI_PADRAO="01/01/2014";
-  const SNAP={"ipca12":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026"],"vals":[5.59,5.68,6.15,6.28,6.37,6.52,6.5,6.51,6.75,6.59,6.56,6.41,7.14,7.7,8.13,8.17,8.47,8.89,9.56,9.53,9.49,9.93,10.48,10.67,10.71,10.36,9.39,9.28,9.32,8.84,8.74,8.97,8.48,7.87,6.99,6.29,5.35,4.76,4.57,4.08,3.6,3.0,2.71,2.46,2.54,2.7,2.8,2.95,2.86,2.84,2.68,2.76,2.86,4.39,4.48,4.19,4.53,4.56,4.05,3.75,3.78,3.89,4.58,4.94,4.66,3.37,3.22,3.43,2.89,2.54,3.27,4.31,4.19,4.01,3.3,2.4,1.88,2.13,2.31,2.44,3.14,3.92,4.31,4.52,4.56,5.2,6.1,6.76,8.06,8.35,8.99,9.68,10.25,10.67,10.74,10.06,10.38,10.54,11.3,12.13,11.73,11.89,10.07,8.73,7.17,6.47,5.9,5.79,5.77,5.6,4.65,4.18,3.94,3.16,3.99,4.61,5.19,4.82,4.68,4.62,4.51,4.5,3.93,3.69,3.93,4.23,4.5,4.24,4.42,4.76,4.87,4.83,4.56,5.06,5.48,5.53,5.32,5.35,5.23,5.13,5.17,4.68,4.46,4.26,4.44,3.81,4.14,4.39,4.72],"code":13522},"ipcaMes":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026"],"vals":[0.55,0.69,0.92,0.67,0.46,0.4,0.01,0.25,0.57,0.42,0.51,0.78,1.24,1.22,1.32,0.71,0.74,0.79,0.62,0.22,0.54,0.82,1.01,0.96,1.27,0.9,0.43,0.61,0.78,0.35,0.52,0.44,0.08,0.26,0.18,0.3,0.38,0.33,0.25,0.14,0.31,-0.23,0.24,0.19,0.16,0.42,0.28,0.44,0.29,0.32,0.09,0.22,0.4,1.26,0.33,-0.09,0.48,0.45,-0.21,0.15,0.32,0.43,0.75,0.57,0.13,0.01,0.19,0.11,-0.04,0.1,0.51,1.15,0.21,0.25,0.07,-0.31,-0.38,0.26,0.36,0.24,0.64,0.86,0.89,1.35,0.25,0.86,0.93,0.31,0.83,0.53,0.96,0.87,1.16,1.25,0.95,0.73,0.54,1.01,1.62,1.06,0.47,0.67,-0.68,-0.36,-0.29,0.59,0.41,0.62,0.53,0.84,0.71,0.61,0.23,-0.08,0.12,0.23,0.26,0.24,0.28,0.56,0.42,0.83,0.16,0.38,0.46,0.21,0.38,-0.02,0.44,0.56,0.39,0.52,0.16,1.31,0.56,0.43,0.26,0.24,0.26,-0.11,0.48,0.09,0.18,0.33,0.33,0.7,0.88,0.67,0.58],"code":433},"selic":{"labels":["01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026","06/2026","07/2026","08/2026"],"vals":[7.0,6.75,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.5,6.0,5.5,5.0,5.0,4.5,4.5,4.25,3.75,3.75,3.0,2.25,2.25,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.75,2.75,3.5,4.25,4.25,5.25,6.25,7.75,7.75,9.25,9.25,10.75,11.75,11.75,12.75,13.25,13.25,13.75,13.75,13.75,13.75,13.75,13.75,13.75,13.75,13.75,13.75,13.75,13.75,13.25,12.75,12.75,12.25,11.75,11.75,11.25,10.75,10.75,10.5,10.5,10.5,10.5,10.75,10.75,11.25,12.25,13.25,13.25,14.25,14.25,14.75,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,15.0,14.75,14.5,14.5,14.25,14.25,14.25],"code":432},"dolar":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026","06/2026"],"vals":[2.3822,2.3837,2.3261,2.2328,2.2209,2.2355,2.2246,2.268,2.3329,2.4483,2.5484,2.6394,2.6342,2.8165,3.1395,3.0432,3.0617,3.1117,3.2231,3.5143,3.9065,3.8801,3.7765,3.8711,4.0524,3.9737,3.7039,3.5658,3.5393,3.4245,3.2756,3.2097,3.2564,3.1858,3.342,3.3523,3.1966,3.1042,3.1279,3.1362,3.2095,3.2954,3.2061,3.1509,3.1348,3.1912,3.2594,3.2919,3.2106,3.2415,3.2792,3.4075,3.6361,3.7732,3.8288,3.9298,4.1165,3.7584,3.7867,3.8851,3.7417,3.7236,3.8465,3.8962,4.0015,3.8588,3.7793,4.02,4.1215,4.087,4.1553,4.1096,4.1495,4.341,4.8839,5.3256,5.6434,5.1966,5.2802,5.4612,5.3995,5.6258,5.4178,5.1456,5.3562,5.4165,5.6461,5.5621,5.2911,5.0319,5.1567,5.2517,5.2797,5.54,5.5569,5.6514,5.5341,5.1966,4.9684,4.758,4.9551,5.0492,5.3681,5.1433,5.237,5.2503,5.2747,5.2424,5.2007,5.1717,5.2115,5.0197,4.9828,4.8516,4.8008,4.9035,4.937,5.0648,4.8983,4.8972,4.9144,4.9644,4.9801,5.1291,5.133,5.389,5.542,5.5526,5.5416,5.6241,5.8071,6.097,6.0218,5.7656,5.7468,5.7837,5.6674,5.5471,5.5285,5.4469,5.3674,5.3855,5.3409,5.4531,5.338,5.2006,5.2316,5.0331,4.9837,5.1276],"code":3698},"dividaPib":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026"],"vals":[52.63,51.84,51.79,52.0,52.18,52.75,53.17,53.81,55.11,55.43,56.01,56.28,57.16,58.28,59.49,59.11,60.21,60.75,62.17,62.97,63.65,63.94,64.29,65.5,66.5,66.66,66.33,66.62,67.58,67.51,68.7,69.34,69.98,69.78,70.84,69.84,69.82,70.39,71.24,71.37,72.34,72.74,73.18,73.61,73.71,74.11,74.02,73.72,74.04,74.5,74.6,74.96,76.12,76.13,75.95,76.02,75.99,75.29,75.69,75.27,75.44,75.52,76.71,77.12,76.55,76.67,76.83,77.55,76.6,75.79,76.2,74.44,74.75,75.15,76.78,78.03,79.95,82.87,83.5,85.83,87.42,87.66,86.96,86.94,86.91,86.87,85.1,82.62,81.44,80.6,80.25,79.64,79.62,79.52,78.22,77.31,77.0,76.92,76.4,76.33,75.68,75.61,75.24,74.56,74.15,73.7,72.95,71.68,71.38,71.77,71.54,71.57,72.11,71.97,72.48,72.89,73.01,73.32,73.32,73.83,74.47,74.81,75.02,75.15,75.67,76.68,77.21,77.36,77.09,77.38,77.5,76.27,75.48,75.78,75.55,75.62,75.75,76.3,77.18,77.31,77.84,78.29,78.96,78.64,78.7,79.12,79.88,80.19,81.07],"code":13762},"desemprego":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026"],"vals":[6.5,6.8,7.2,7.2,7.0,6.9,7.0,7.0,6.8,6.7,6.6,6.6,6.9,7.5,8.0,8.1,8.2,8.4,8.6,8.8,9.0,9.1,9.1,9.1,9.6,10.3,11.0,11.3,11.3,11.4,11.7,11.9,11.9,11.9,12.0,12.1,12.7,13.3,13.9,13.7,13.4,13.1,12.9,12.7,12.5,12.3,12.1,11.9,12.3,12.7,13.2,13.0,12.8,12.6,12.4,12.2,12.0,11.8,11.7,11.7,12.2,12.5,12.8,12.6,12.4,12.1,11.9,11.9,11.9,11.7,11.3,11.1,11.3,11.7,12.4,12.7,13.1,13.6,14.1,14.8,14.9,14.6,14.3,14.2,14.4,14.6,14.9,14.8,14.7,14.2,13.7,13.2,12.7,12.1,11.6,11.1,11.2,11.2,11.1,10.5,9.8,9.3,9.1,8.9,8.7,8.3,8.1,7.9,8.4,8.6,8.8,8.5,8.3,8.0,7.9,7.8,7.7,7.6,7.5,7.4,7.6,7.8,7.9,7.5,7.1,6.9,6.8,6.6,6.4,6.2,6.1,6.2,6.5,6.8,7.0,6.6,6.2,5.8,5.6,5.6,5.6,5.4,5.2,5.1,5.4,5.8,6.1,5.8,5.6],"code":24369},"ibcbr":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026"],"vals":[103.6582,103.36864,103.25022,102.80803,102.43602,100.25356,101.0407,101.90197,102.45349,101.67109,101.76346,102.12533,101.28724,100.657,100.45464,99.12943,98.45884,97.50654,96.38099,96.85774,96.15944,96.60444,95.5339,95.24794,94.88414,94.7602,94.07568,94.01266,93.79359,93.9612,93.6625,93.39574,93.55108,93.1503,93.12017,92.73578,93.40869,94.54132,94.60396,94.49422,94.26524,94.8603,94.92239,94.64614,94.64269,94.90782,95.03715,96.17306,95.81429,95.4599,95.46903,96.00747,93.07826,95.76022,96.07494,96.81472,96.30616,96.64674,96.89632,97.04476,96.96132,96.37268,95.8144,95.78904,97.13551,96.60553,96.39394,96.63553,96.95561,98.09266,97.92796,97.51042,97.61484,97.69009,91.28235,82.99207,85.51728,89.37267,91.73673,93.51412,95.37878,97.32466,97.52372,97.64545,97.8197,98.62532,95.3322,96.37966,97.05093,96.75787,96.42257,97.03115,96.97727,97.49541,99.05485,99.30268,97.42644,98.38327,99.5587,99.56286,99.67481,99.51873,101.41705,101.1048,101.15658,101.44313,100.70751,100.45671,100.1131,102.99794,103.10183,104.18587,102.46133,102.39681,102.86628,102.48117,102.49422,102.81544,103.57529,104.68308,104.47997,104.63436,104.71934,104.96661,105.66388,106.57692,106.95254,107.13607,107.99994,108.20756,107.96783,107.1418,108.21392,108.74593,110.20451,110.0593,109.08727,108.85988,108.41316,108.83964,108.76251,108.78795,109.30007,109.27117,110.09703,110.78559,110.58589,111.15205],"code":24364},"baseMon":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026"],"vals":[235625338.0,227826681.0,223141949.0,225064836.0,222889174.0,223367049.0,225994071.0,226342864.0,231813871.0,234187883.0,236042054.0,259019072.0,253143092.0,241936239.0,240742528.0,238311480.0,232080485.0,233247557.0,234080416.0,229410329.0,230966801.0,237344387.0,237068635.0,256350359.0,251652820.0,244271149.0,241117782.0,237362700.0,238375730.0,236508935.0,237508676.0,237161461.0,243218284.0,244077449.0,243446509.0,265369719.0,260397372.0,251571268.0,248035925.0,248716917.0,248050620.0,250502233.0,251374098.0,249865509.0,254445013.0,254300762.0,256610962.0,282291930.0,277091473.0,268674457.0,264988299.0,262149570.0,263424071.0,265082605.0,267340246.0,267917708.0,275233403.0,277461939.0,275490392.0,298416099.0,288827411.0,278807479.0,277602465.0,275178211.0,271843885.0,274001077.0,273466549.0,275518402.0,281284398.0,283725360.0,289250788.0,315031079.0,309794865.0,302521740.0,299183977.0,315351135.0,354968825.0,374594200.0,391972486.0,400306446.0,407541550.0,412083255.0,415484637.0,428351152.0,433440319.0,418386143.0,407067483.0,402056149.0,400492834.0,402914464.0,409819792.0,412689327.0,409472596.0,403592971.0,399463622.0,406997942.0,408685827.0,394010779.0,391055272.0,387964969.0,392180718.0,396583898.0,395335201.0,391342492.0,390140792.0,393177079.0,394384849.0,407026123.0,415205831.0,407607488.0,403820481.0,396092965.0,395505903.0,397422360.0,402700636.0,402746313.0,400051972.0,398986805.0,409947053.0,418589557.0,421432901.0,416570177.0,412553867.0,412789911.0,422076679.0,430613704.0,433937918.0,431708061.0,431104239.0,439507281.0,437162694.0,445844085.0,452884576.0,441713882.0,441881838.0,437110448.0,443043153.0,446192069.0,442674919.0,437234648.0,430731132.0,429447252.0,429180764.0,440866763.0,448317100.0,443131081.0,443323247.0,420896229.0,424785548.0],"code":1785},"infHist":{"labels":["01/1989","02/1989","03/1989","04/1989","05/1989","06/1989","07/1989","08/1989","09/1989","10/1989","11/1989","12/1989","01/1990","02/1990","03/1990","04/1990","05/1990","06/1990","07/1990","08/1990","09/1990","10/1990","11/1990","12/1990","01/1991","02/1991","03/1991","04/1991","05/1991","06/1991","07/1991","08/1991","09/1991","10/1991","11/1991","12/1991","01/1992","02/1992","03/1992","04/1992","05/1992","06/1992","07/1992","08/1992","09/1992","10/1992","11/1992","12/1992","01/1993","02/1993","03/1993","04/1993","05/1993","06/1993","07/1993","08/1993","09/1993","10/1993","11/1993","12/1993","01/1994","02/1994","03/1994","04/1994","05/1994","06/1994","07/1994","08/1994","09/1994","10/1994","11/1994","12/1994","01/1995","02/1995","03/1995","04/1995","05/1995","06/1995","07/1995","08/1995","09/1995","10/1995","11/1995","12/1995","01/1996","02/1996","03/1996","04/1996","05/1996","06/1996","07/1996","08/1996","09/1996","10/1996","11/1996","12/1996","01/1997","02/1997","03/1997","04/1997","05/1997","06/1997","07/1997","08/1997","09/1997","10/1997","11/1997","12/1997","01/1998","02/1998","03/1998","04/1998","05/1998","06/1998","07/1998","08/1998","09/1998","10/1998","11/1998","12/1998","01/1999","02/1999","03/1999","04/1999","05/1999","06/1999","07/1999","08/1999","09/1999","10/1999","11/1999","12/1999","01/2000","02/2000","03/2000","04/2000","05/2000","06/2000","07/2000","08/2000","09/2000","10/2000","11/2000","12/2000","01/2001","02/2001","03/2001","04/2001","05/2001","06/2001","07/2001","08/2001","09/2001","10/2001","11/2001","12/2001","01/2002","02/2002","03/2002","04/2002","05/2002","06/2002","07/2002","08/2002","09/2002","10/2002","11/2002","12/2002","01/2003","02/2003","03/2003","04/2003","05/2003","06/2003","07/2003","08/2003","09/2003","10/2003","11/2003","12/2003","01/2004","02/2004","03/2004","04/2004","05/2004","06/2004","07/2004","08/2004","09/2004","10/2004","11/2004","12/2004","01/2005","02/2005","03/2005","04/2005","05/2005","06/2005","07/2005","08/2005","09/2005","10/2005","11/2005","12/2005","01/2006","02/2006","03/2006","04/2006","05/2006","06/2006","07/2006","08/2006","09/2006","10/2006","11/2006","12/2006","01/2007","02/2007","03/2007","04/2007","05/2007","06/2007","07/2007","08/2007","09/2007","10/2007","11/2007","12/2007","01/2008","02/2008","03/2008","04/2008","05/2008","06/2008","07/2008","08/2008","09/2008","10/2008","11/2008","12/2008","01/2009","02/2009","03/2009","04/2009","05/2009","06/2009","07/2009","08/2009","09/2009","10/2009","11/2009","12/2009","01/2010","02/2010","03/2010","04/2010","05/2010","06/2010","07/2010","08/2010","09/2010","10/2010","11/2010","12/2010","01/2011","02/2011","03/2011","04/2011","05/2011","06/2011","07/2011","08/2011","09/2011","10/2011","11/2011","12/2011","01/2012","02/2012","03/2012","04/2012","05/2012","06/2012","07/2012","08/2012","09/2012","10/2012","11/2012","12/2012","01/2013","02/2013","03/2013","04/2013","05/2013","06/2013","07/2013","08/2013","09/2013","10/2013","11/2013","12/2013","01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026","05/2026","06/2026"],"vals":[36.56,11.8,4.23,5.17,12.76,26.76,37.88,36.48,38.92,39.7,44.27,49.39,71.9,71.68,81.32,11.33,9.08,9.02,12.98,12.93,11.71,14.16,17.45,16.46,19.93,21.11,7.25,8.74,6.53,9.86,12.83,15.49,16.19,25.85,25.76,22.14,26.84,24.79,20.7,18.54,22.45,21.42,21.69,25.54,27.37,24.94,24.22,23.7,28.73,26.51,27.81,28.22,32.27,30.72,31.96,33.53,36.99,35.14,36.96,36.22,42.19,42.41,44.83,42.46,40.95,46.58,5.47,3.34,1.55,2.55,2.47,0.57,1.36,1.15,1.81,2.3,0.4,2.62,2.24,1.29,-1.08,0.23,1.33,0.27,1.79,0.76,0.22,0.7,1.68,1.22,1.09,0.0,0.13,0.22,0.28,0.88,1.58,0.42,1.16,0.59,0.3,0.7,0.09,-0.04,0.59,0.34,0.83,0.69,0.88,0.02,0.23,-0.13,0.23,0.28,-0.38,-0.17,-0.02,-0.03,-0.18,0.98,1.15,4.44,1.98,0.03,-0.34,1.02,1.59,1.45,1.47,1.89,2.53,1.23,1.02,0.19,0.18,0.13,0.67,0.93,2.26,1.82,0.69,0.37,0.39,0.76,0.49,0.34,0.8,1.13,0.44,1.46,1.62,0.9,0.38,1.45,0.76,0.18,0.19,0.18,0.11,0.7,1.11,1.74,2.05,2.36,2.64,4.21,5.84,2.7,2.17,1.59,1.66,0.41,-0.67,-0.7,-0.2,0.62,1.05,0.44,0.48,0.6,0.8,1.08,0.93,1.15,1.46,1.29,1.14,1.31,0.48,0.53,0.82,0.52,0.33,0.4,0.99,0.51,-0.25,-0.45,-0.4,-0.79,-0.13,0.63,0.33,0.07,0.72,-0.06,-0.45,0.02,0.38,0.67,0.17,0.41,0.24,0.81,0.57,0.26,0.43,0.23,0.22,0.14,0.16,0.26,0.37,1.39,1.17,0.75,1.05,1.47,0.99,0.38,0.7,1.12,1.88,1.89,1.12,-0.38,0.36,1.09,0.07,-0.44,0.01,-0.13,-0.84,0.04,0.18,-0.32,-0.64,0.09,0.25,-0.04,0.07,-0.11,1.01,1.09,0.63,0.72,1.57,0.34,0.22,1.1,1.1,1.03,1.58,0.38,0.98,0.96,0.61,0.5,0.01,-0.13,-0.05,0.61,0.75,0.4,0.43,-0.16,0.3,0.07,0.56,1.02,0.91,0.69,1.52,1.29,0.88,-0.31,0.25,0.66,0.31,0.2,0.31,-0.06,0.32,0.76,0.14,0.46,1.36,0.63,0.28,0.69,0.4,0.85,1.48,0.45,-0.45,-0.63,-0.55,0.06,0.02,0.59,1.14,0.38,0.67,0.53,1.21,0.92,0.4,0.68,0.58,0.4,1.42,1.76,1.19,0.44,1.53,0.79,0.43,0.36,1.13,1.63,-0.39,0.43,0.03,0.13,0.05,0.83,0.43,0.06,-0.38,-1.24,-0.51,-0.96,-0.3,0.24,0.62,0.1,0.8,0.74,0.58,0.15,0.56,0.93,1.64,1.48,0.44,0.68,1.79,0.26,-1.14,-0.45,0.07,1.25,1.07,0.9,0.4,0.63,-0.01,-0.51,0.5,0.55,0.85,1.74,0.09,0.01,1.64,0.05,1.07,1.6,2.34,3.87,3.3,3.68,2.64,0.76,2.91,2.71,2.17,2.22,3.4,0.11,1.45,-0.14,-0.55,1.6,-0.58,1.25,2.01,1.5,2.37,0.41,0.69,0.62,-0.38,-0.55,-1.22,-0.62,-0.18,0.31,0.06,0.04,-0.34,-1.01,-2.33,-1.45,-0.4,0.05,0.45,0.51,0.5,0.64,-0.27,-0.41,-0.3,0.72,0.87,0.5,0.83,0.12,1.03,1.54,1.18,0.87,0.11,1.0,-0.5,0.3,-0.85,-1.8,-0.07,0.2,0.36,-0.03,0.01,0.1,0.2,-0.84,1.14,2.41,0.87,-0.79],"code":190}};
-  const SNAP_DATA="mai/2026";              // último mês do snapshot embutido
-  let DADOS={}, FONTE={};
-
-  function parseSGS(raw,daily){
-    const labels=[],vals=[]; const last={};
-    for(const r of raw){
-      const v=parseFloat(r.valor); if(!Number.isFinite(v))continue;
-      const [dd,mm,yy]=r.data.split("/"); const ml=mm+"/"+yy;
-      if(daily){ last[ml]=v; } else { labels.push(ml); vals.push(v); }
-    }
-    if(daily) for(const ml in last){ labels.push(ml); vals.push(last[ml]); }
-    return {labels,vals};
-  }
-  function janela(key){
-    if(key==="infHist")return DI_LONGA;
-    if(DAILY.has(key)){ const y=new Date().getFullYear()-9; return "01/01/"+y; }
-    return DI_PADRAO;
-  }
+  /* ===== dados: BCB ao vivo + snapshot ===== */
+  const SGS={fbcf:22102,ibcbr:24364};
+  const DI={fbcf:"01/01/2010",ibcbr:"01/01/2014"};
+  const SNAP={"fbcf":{"labels":["01/2010","04/2010","07/2010","10/2010","01/2011","04/2011","07/2011","10/2011","01/2012","04/2012","07/2012","10/2012","01/2013","04/2013","07/2013","10/2013","01/2014","04/2014","07/2014","10/2014","01/2015","04/2015","07/2015","10/2015","01/2016","04/2016","07/2016","10/2016","01/2017","04/2017","07/2017","10/2017","01/2018","04/2018","07/2018","10/2018","01/2019","04/2019","07/2019","10/2019","01/2020","04/2020","07/2020","10/2020","01/2021","04/2021","07/2021","10/2021","01/2022","04/2022","07/2022","10/2022","01/2023","04/2023","07/2023","10/2023","01/2024","04/2024","07/2024","10/2024","01/2025","04/2025","07/2025","10/2025","01/2026"],"vals":[159.58,166.86,182.23,177.54,172.71,180.43,192.72,187.24,178.13,182.44,189.86,188.37,183.39,197.93,203.81,196.73,191.03,185.27,188.63,183.9,173.0,162.56,160.49,148.34,140.58,145.16,143.49,137.0,133.14,134.06,142.13,142.42,137.6,139.35,155.23,148.43,141.67,149.65,162.78,149.89,151.6,127.91,148.43,165.52,169.31,161.99,170.39,168.35,159.3,165.23,179.03,173.78,161.61,162.67,166.78,166.1,165.76,171.18,183.91,181.4,180.69,178.21,188.18,175.74,178.18],"code":22102},"ibcbr":{"labels":["01/2014","02/2014","03/2014","04/2014","05/2014","06/2014","07/2014","08/2014","09/2014","10/2014","11/2014","12/2014","01/2015","02/2015","03/2015","04/2015","05/2015","06/2015","07/2015","08/2015","09/2015","10/2015","11/2015","12/2015","01/2016","02/2016","03/2016","04/2016","05/2016","06/2016","07/2016","08/2016","09/2016","10/2016","11/2016","12/2016","01/2017","02/2017","03/2017","04/2017","05/2017","06/2017","07/2017","08/2017","09/2017","10/2017","11/2017","12/2017","01/2018","02/2018","03/2018","04/2018","05/2018","06/2018","07/2018","08/2018","09/2018","10/2018","11/2018","12/2018","01/2019","02/2019","03/2019","04/2019","05/2019","06/2019","07/2019","08/2019","09/2019","10/2019","11/2019","12/2019","01/2020","02/2020","03/2020","04/2020","05/2020","06/2020","07/2020","08/2020","09/2020","10/2020","11/2020","12/2020","01/2021","02/2021","03/2021","04/2021","05/2021","06/2021","07/2021","08/2021","09/2021","10/2021","11/2021","12/2021","01/2022","02/2022","03/2022","04/2022","05/2022","06/2022","07/2022","08/2022","09/2022","10/2022","11/2022","12/2022","01/2023","02/2023","03/2023","04/2023","05/2023","06/2023","07/2023","08/2023","09/2023","10/2023","11/2023","12/2023","01/2024","02/2024","03/2024","04/2024","05/2024","06/2024","07/2024","08/2024","09/2024","10/2024","11/2024","12/2024","01/2025","02/2025","03/2025","04/2025","05/2025","06/2025","07/2025","08/2025","09/2025","10/2025","11/2025","12/2025","01/2026","02/2026","03/2026","04/2026"],"vals":[103.6582,103.36864,103.25022,102.80803,102.43602,100.25356,101.0407,101.90197,102.45349,101.67109,101.76346,102.12533,101.28724,100.657,100.45464,99.12943,98.45884,97.50654,96.38099,96.85774,96.15944,96.60444,95.5339,95.24794,94.88414,94.7602,94.07568,94.01266,93.79359,93.9612,93.6625,93.39574,93.55108,93.1503,93.12017,92.73578,93.40869,94.54132,94.60396,94.49422,94.26524,94.8603,94.92239,94.64614,94.64269,94.90782,95.03715,96.17306,95.81429,95.4599,95.46903,96.00747,93.07826,95.76022,96.07494,96.81472,96.30616,96.64674,96.89632,97.04476,96.96132,96.37268,95.8144,95.78904,97.13551,96.60553,96.39394,96.63553,96.95561,98.09266,97.92796,97.51042,97.61484,97.69009,91.28235,82.99207,85.51728,89.37267,91.73673,93.51412,95.37878,97.32466,97.52372,97.64545,97.8197,98.62532,95.3322,96.37966,97.05093,96.75787,96.42257,97.03115,96.97727,97.49541,99.05485,99.30268,97.42644,98.38327,99.5587,99.56286,99.67481,99.51873,101.41705,101.1048,101.15658,101.44313,100.70751,100.45671,100.1131,102.99794,103.10183,104.18587,102.46133,102.39681,102.86628,102.48117,102.49422,102.81544,103.57529,104.68308,104.47997,104.63436,104.71934,104.96661,105.66388,106.57692,106.95254,107.13607,107.99994,108.20756,107.96783,107.1418,108.21392,108.74593,110.20451,110.0593,109.08727,108.85988,108.41316,108.83964,108.76251,108.78795,109.30007,109.27117,110.09703,110.78559,110.58589,111.15205],"code":24364}};
+  const SNAP_DATA="2026";
+  let DADOS={},FONTE={};
+  function parseSGS(raw){const labels=[],vals=[];for(const r of raw){const v=parseFloat(r.valor);if(!Number.isFinite(v))continue;const[dd,mm,yy]=r.data.split("/");labels.push(mm+"/"+yy);vals.push(v);}return{labels,vals};}
   async function carregar(){
     await Promise.all(Object.keys(SGS).map(async key=>{
-      try{
-        const url=`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${SGS[key]}/dados?formato=json&dataInicial=${janela(key)}`;
-        const r=await fetch(url,{cache:"no-store"}); if(!r.ok)throw 0;
-        const raw=await r.json();
-        const d=parseSGS(raw,DAILY.has(key));
-        if(!d.vals.length)throw 0;
-        DADOS[key]=d; FONTE[key]="ao vivo";
-      }catch(e){ DADOS[key]=SNAP[key]; FONTE[key]="offline"; }
+      try{const url=`https://api.bcb.gov.br/dados/serie/bcdata.sgs.${SGS[key]}/dados?formato=json&dataInicial=${DI[key]}`;
+        const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw 0;const d=parseSGS(await r.json());
+        if(!d.vals.length)throw 0;DADOS[key]=d;FONTE[key]="ao vivo";
+      }catch(e){DADOS[key]=SNAP[key];FONTE[key]="offline";}
     }));
-    atualizarStatus();
+    status();
   }
-  function atualizarStatus(){
-    const live=Object.values(FONTE).filter(f=>f==="ao vivo").length;
-    const tot=Object.keys(SGS).length;
+  function status(){
+    const live=Object.values(FONTE).filter(f=>f==="ao vivo").length,tot=Object.keys(SGS).length;
     const el=document.getElementById("statusFonte");
-    if(live===tot) el.innerHTML=`<span class="dot live"></span> Dados ao vivo do Banco Central`;
-    else if(live===0) el.innerHTML=`<span class="dot offline"></span> Sem conexão — snapshot embutido (até ${SNAP_DATA})`;
-    else el.innerHTML=`<span class="dot offline"></span> Live parcial (${live}/${tot}); resto do snapshot (${SNAP_DATA})`;
+    if(live===tot)el.innerHTML=`<span class="dot live"></span> Dados ao vivo do Banco Central`;
+    else if(live===0)el.innerHTML=`<span class="dot offline"></span> Sem conexão — snapshot embutido (${SNAP_DATA})`;
+    else el.innerHTML=`<span class="dot offline"></span> Live parcial (${live}/${tot}); resto do snapshot`;
   }
-  const ultimo=key=>{ const d=DADOS[key]; return {v:d.vals[d.vals.length-1],l:d.labels[d.labels.length-1]}; };
+
+  /* ===== taxa de investimento real (FBCF ancorada em ~17,5% médio, IBGE) ===== */
+  const ANCHOR=0.175;
+  function taxaInvest(){const d=DADOS.fbcf;const m=d.vals.reduce((a,b)=>a+b,0)/d.vals.length;
+    return {serie:d.vals.map(v=>ANCHOR*v/m),labels:d.labels,s:ANCHOR*d.vals[d.vals.length-1]/m,ultimoL:d.labels[d.labels.length-1]};}
+
+  /* ===== Solow ===== */
+  const PAD={s:0.17,alpha:0.45,n:0.006,g:0.012,delta:0.04,k0:1.0};
+  let p={...PAD};
+  const brk=q=>q.n+q.g+q.delta;
+  const f=(k,q)=>Math.pow(Math.max(k,0),q.alpha);
+  const kstar=q=>Math.pow(q.s/brk(q),1/(1-q.alpha));
+  const kgold=q=>Math.pow(q.alpha/brk(q),1/(1-q.alpha));
+  function sim(q,T=260,dt=0.25){let k=q.k0;const K=[],Y=[],Cc=[];for(let t=0;t<=T;t+=dt){const y=f(k,q);K.push(k);Y.push(y);Cc.push((1-q.s)*y);k=Math.max(1e-9,k+(q.s*y-brk(q)*k)*dt);}return{K,Y,Cc,dt};}
 
   /* ===== helpers de gráfico ===== */
-  function mapPoint(x,y,xMin,xMax,yMin,yMax,W,H,pad){
-    const pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;
-    return [pad.l+((x-xMin)/(xMax-xMin))*pw, pad.t+((yMax-y)/(yMax-yMin))*ph];
-  }
+  function mapPoint(x,y,xMin,xMax,yMin,yMax,W,H,pad){const pw=W-pad.l-pad.r,ph=H-pad.t-pad.b;return[pad.l+((x-xMin)/(xMax-xMin))*pw,pad.t+((yMax-y)/(yMax-yMin))*ph];}
   function axes(xt,yt,xMin,xMax,yMin,yMax,W,H,pad,xl,yl,xf,yf){
-    xf=xf||(x=>fmt(x,0)); yf=yf||(y=>fmt(y,Math.abs(y)<10?1:0));
-    let o="";
-    xt.forEach(x=>{const [sx]=mapPoint(x,yMin,xMin,xMax,yMin,yMax,W,H,pad);
-      o+=`<line x1="${sx}" y1="${pad.t}" x2="${sx}" y2="${H-pad.b}" stroke="${C.grid}" stroke-width=".7"/>`;
-      o+=`<text x="${sx}" y="${H-pad.b+17}" text-anchor="middle" fill="${C.muted}" font-size="10" font-family="Consolas">${xf(x)}</text>`;});
-    yt.forEach(y=>{const [,sy]=mapPoint(xMin,y,xMin,xMax,yMin,yMax,W,H,pad);
-      o+=`<line x1="${pad.l}" y1="${sy}" x2="${W-pad.r}" y2="${sy}" stroke="${C.grid}" stroke-width=".7"/>`;
-      o+=`<text x="${pad.l-8}" y="${sy+4}" text-anchor="end" fill="${C.muted}" font-size="10" font-family="Consolas">${yf(y)}</text>`;});
-    o+=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="${C.axis}"/>`;
-    o+=`<line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="${C.axis}"/>`;
-    o+=`<text x="${W/2}" y="${H-11}" text-anchor="middle" fill="${C.muted}" font-size="12">${xl}</text>`;
-    o+=`<text transform="translate(14 ${H/2}) rotate(-90)" text-anchor="middle" fill="${C.muted}" font-size="12">${yl}</text>`;
+    xf=xf||(x=>fmt(x,x<10&&x>-10?1:0));yf=yf||(y=>fmt(y,Math.abs(y)<10?1:0));let o="";
+    xt.forEach(x=>{const[sx]=mapPoint(x,yMin,xMin,xMax,yMin,yMax,W,H,pad);o+=`<line x1="${sx}" y1="${pad.t}" x2="${sx}" y2="${H-pad.b}" stroke="${C.grid}" stroke-width=".7"/><text x="${sx}" y="${H-pad.b+17}" text-anchor="middle" fill="${C.muted}" font-size="10" font-family="Consolas">${xf(x)}</text>`;});
+    yt.forEach(y=>{const[,sy]=mapPoint(xMin,y,xMin,xMax,yMin,yMax,W,H,pad);o+=`<line x1="${pad.l}" y1="${sy}" x2="${W-pad.r}" y2="${sy}" stroke="${C.grid}" stroke-width=".7"/><text x="${pad.l-8}" y="${sy+4}" text-anchor="end" fill="${C.muted}" font-size="10" font-family="Consolas">${yf(y)}</text>`;});
+    o+=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="${C.axis}"/><line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="${C.axis}"/>`;
+    o+=`<text x="${W/2}" y="${H-11}" text-anchor="middle" fill="${C.muted}" font-size="12">${xl}</text><text transform="translate(14 ${H/2}) rotate(-90)" text-anchor="middle" fill="${C.muted}" font-size="12">${yl}</text>`;
     return o;
   }
-  // linhas no tempo. series:[{name,color,vals,dash}], labels alinhados ao maior vals
+  function pathFn(fn,xMin,xMax,yMin,yMax,W,H,pad,steps){steps=steps||220;let d="";for(let i=0;i<=steps;i++){const x=xMin+i/steps*(xMax-xMin),y=fn(x);if(Number.isFinite(y)&&y>=yMin-1e5&&y<=yMax+1e5){const[sx,sy]=mapPoint(x,clamp(y,yMin,yMax),xMin,xMax,yMin,yMax,W,H,pad);d+=(d?"L":"M")+sx.toFixed(1)+","+sy.toFixed(1);}}return d;}
   function lineChart(series,labels,opt){
-    opt=opt||{}; const W=opt.W||540,H=opt.H||330,pad={t:24,r:16,b:46,l:56};
+    opt=opt||{};const W=opt.W||520,H=opt.H||320,pad={t:22,r:16,b:44,l:54};
     const n=Math.max(...series.map(s=>s.vals.length));
     const flat=series.flatMap(s=>s.vals).filter(Number.isFinite);
-    const log=opt.log, ty=v=>log?Math.log10(Math.max(v,1e-9)):v;
-    let yMin=opt.yMin!=null?opt.yMin:Math.min(...flat), yMax=opt.yMax!=null?opt.yMax:Math.max(...flat);
-    if(yMin===yMax){yMax+=1;yMin-=1;} let lo=ty(yMin),hi=ty(yMax); if(lo===hi)hi=lo+1;
-    const pad2=(hi-lo)*0.05; lo-=pad2; hi+=pad2;
-    const xMin=0,xMax=n-1||1;
-    const xt=[],st=Math.max(1,Math.round(n/6)); for(let i=0;i<n;i+=st)xt.push(i);
-    const yt=[]; for(let i=0;i<=5;i++)yt.push(lo+(hi-lo)*i/5);
-    const yf=v=>{const r=log?Math.pow(10,v):v; return opt.pctY?fmt(r,r<10?1:0)+"%":(log?(r>=1e4?r.toExponential(0):fmt(r,r<10?1:0)):fmt(r,Math.abs(r)<10?2:0));};
+    let yMin=opt.yMin!=null?opt.yMin:Math.min(...flat),yMax=opt.yMax!=null?opt.yMax:Math.max(...flat);
+    if(yMin===yMax){yMax+=1;yMin-=1;}const p2=(yMax-yMin)*0.06;yMin-=p2;yMax+=p2;
+    const xMin=0,xMax=n-1||1,xt=[],st=Math.max(1,Math.round(n/6));for(let i=0;i<n;i+=st)xt.push(i);
+    const yt=[];for(let i=0;i<=5;i++)yt.push(yMin+(yMax-yMin)*i/5);
     const xf=i=>labels&&labels[Math.round(i)]?labels[Math.round(i)]:Math.round(i);
-    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes(xt,yt,xMin,xMax,lo,hi,W,H,pad,opt.xlabel||"",opt.ylabel||"",xf,yf);
-    if(opt.mark!=null){const [mx]=mapPoint(opt.mark,lo,xMin,xMax,lo,hi,W,H,pad);
-      svg+=`<line x1="${mx}" y1="${pad.t}" x2="${mx}" y2="${H-pad.b}" stroke="${C.ok}" stroke-width="2" stroke-dasharray="5 4"/>`;
-      svg+=`<text x="${mx+4}" y="${pad.t+12}" fill="${C.ok}" font-size="10">${opt.markLabel||""}</text>`;}
-    if(opt.marks)opt.marks.forEach(m=>{const [mx]=mapPoint(m.i,lo,xMin,xMax,lo,hi,W,H,pad);
-      svg+=`<line x1="${mx}" y1="${pad.t}" x2="${mx}" y2="${H-pad.b}" stroke="${m.color||C.muted}" stroke-width="1.4" stroke-dasharray="4 4" stroke-opacity=".7"/>`;
-      svg+=`<text x="${mx+3}" y="${H-pad.b-6}" fill="${m.color||C.muted}" font-size="10">${m.label}</text>`;});
-    series.forEach(s=>{const pts=s.vals.map((v,i)=>{if(!Number.isFinite(v))return null;const [sx,sy]=mapPoint(i,clamp(ty(v),lo,hi),xMin,xMax,lo,hi,W,H,pad);return sx.toFixed(1)+","+sy.toFixed(1);}).filter(Boolean);
-      svg+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.4"${s.dash?' stroke-dasharray="7 5"':''}/>`;});
-    let lx=pad.l+8; series.forEach(s=>{svg+=`<rect x="${lx}" y="${pad.t-3}" width="11" height="4" fill="${s.color}"/><text x="${lx+15}" y="${pad.t+2}" fill="${C.muted}" font-size="11">${s.name}</text>`;lx+=s.name.length*7+34;});
+    const yf=opt.pctY?(v=>fmt(v*100,v<0.1?1:0)+"%"):(v=>fmt(v,Math.abs(v)<10?2:0));
+    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes(xt,yt,xMin,xMax,yMin,yMax,W,H,pad,opt.xlabel||"",opt.ylabel||"",xf,yf);
+    series.forEach(s=>{const pts=s.vals.map((v,i)=>{if(!Number.isFinite(v))return null;const[sx,sy]=mapPoint(i,clamp(v,yMin,yMax),xMin,xMax,yMin,yMax,W,H,pad);return sx.toFixed(1)+","+sy.toFixed(1);}).filter(Boolean);
+      svg+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${s.color}" stroke-width="2.6"${s.dash?' stroke-dasharray="7 5"':''}/>`;});
+    let lx=pad.l+8;series.forEach(s=>{svg+=`<rect x="${lx}" y="${pad.t-4}" width="11" height="4" fill="${s.color}"/><text x="${lx+15}" y="${pad.t+1}" fill="${C.muted}" font-size="11">${s.name}</text>`;lx+=s.name.length*7+34;});
     return svg+`</svg>`;
   }
-  function scatter(pts,opt){
-    const W=opt.W||540,H=opt.H||400,pad={t:24,r:16,b:48,l:56};
-    const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
-    let xMin=Math.min(...xs),xMax=Math.max(...xs),yMin=Math.min(...ys),yMax=Math.max(...ys);
-    xMin=Math.floor(xMin-0.5);xMax=Math.ceil(xMax+0.5);yMin=Math.max(0,Math.floor(yMin-0.5));yMax=Math.ceil(yMax+0.5);
-    const xt=[],yt=[]; for(let x=xMin;x<=xMax;x+=Math.max(1,Math.round((xMax-xMin)/6)))xt.push(x);
-    for(let y=yMin;y<=yMax;y+=Math.max(1,Math.round((yMax-yMin)/6)))yt.push(y);
-    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes(xt,yt,xMin,xMax,yMin,yMax,W,H,pad,opt.xlabel,opt.ylabel,x=>fmt(x,0)+"%",y=>fmt(y,0)+"%");
-    pts.forEach(p=>{const [sx,sy]=mapPoint(p.x,p.y,xMin,xMax,yMin,yMax,W,H,pad);
-      svg+=`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3.4" fill="${p.color||C.selic}" fill-opacity=".75"/>`;});
-    if(opt.fit){const {a,b}=opt.fit;
-      const [x1,y1]=mapPoint(xMin,a+b*xMin,xMin,xMax,yMin,yMax,W,H,pad);
-      const [x2,y2]=mapPoint(xMax,a+b*xMax,xMin,xMax,yMin,yMax,W,H,pad);
-      svg+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${C.gold}" stroke-width="2.6"/>`;}
+
+  function gFase(){
+    const W=520,H=340,pad={t:22,r:16,b:46,l:54};
+    const ks=kstar(p),kg=kgold(p),b=brk(p);
+    const xMax=Math.max(ks*1.8,kg*1.5,3),yMax=Math.max(f(xMax,p),xMax*b)*1.05;
+    const xt=[0,.25,.5,.75,1].map(z=>+(z*xMax).toFixed(1)),yt=[0,.25,.5,.75,1].map(z=>+(z*yMax).toFixed(1));
+    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes(xt,yt,0,xMax,0,yMax,W,H,pad,"k (capital por trabalhador efetivo)","");
+    svg+=`<path d="${pathFn(k=>f(k,p),0,xMax,0,yMax,W,H,pad)}" stroke="${C.y}" stroke-width="2.4" fill="none"/>`;
+    svg+=`<path d="${pathFn(k=>p.s*f(k,p),0,xMax,0,yMax,W,H,pad)}" stroke="${C.inv}" stroke-width="2.8" fill="none"/>`;
+    svg+=`<path d="${pathFn(k=>b*k,0,xMax,0,yMax,W,H,pad)}" stroke="${C.warn}" stroke-width="2.2" fill="none"/>`;
+    const es=mapPoint(ks,p.s*f(ks,p),0,xMax,0,yMax,W,H,pad);
+    svg+=`<line x1="${es[0]}" y1="${pad.t}" x2="${es[0]}" y2="${H-pad.b}" stroke="${C.EQ}" stroke-opacity=".5" stroke-dasharray="4 4"/><circle cx="${es[0]}" cy="${es[1]}" r="5" fill="${C.EQ}"/><text x="${es[0]+7}" y="${es[1]-7}" fill="${C.EQ}" font-size="11">k*=${fmt(ks,2)}</text>`;
+    const gx=mapPoint(kg,0,0,xMax,0,yMax,W,H,pad)[0];
+    svg+=`<line x1="${gx}" y1="${pad.t}" x2="${gx}" y2="${H-pad.b}" stroke="${C.gold}" stroke-opacity=".7" stroke-dasharray="6 5"/><text x="${gx+4}" y="${pad.t+12}" fill="${C.gold}" font-size="10">ouro</text>`;
+    svg+=`<text x="${pad.l+8}" y="${pad.t+14}" fill="${C.y}" font-size="11">f(k)=k^α</text><text x="${pad.l+8}" y="${pad.t+30}" fill="${C.inv}" font-size="11">s·f(k)</text><text x="${pad.l+8}" y="${pad.t+46}" fill="${C.warn}" font-size="11">(n+g+δ)k</text>`;
     return svg+`</svg>`;
   }
-  function ols(pts){
-    const n=pts.length,mx=pts.reduce((s,p)=>s+p.x,0)/n,my=pts.reduce((s,p)=>s+p.y,0)/n;
-    let sxy=0,sxx=0,syy=0; pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my);sxx+=(p.x-mx)**2;syy+=(p.y-my)**2;});
-    const b=sxy/sxx,a=my-b*mx,r=sxy/Math.sqrt(sxx*syy);
-    return {a,b,r2:r*r};
-  }
-  // reduz uma série para os últimos N pontos
-  function tail(key,n){const d=DADOS[key];const s=Math.max(0,d.vals.length-n);return {vals:d.vals.slice(s),labels:d.labels.slice(s)};}
-
-  /* ===== PAINEL ===== */
-  function renderPainel(){
-    const cs=[
-      ["Selic (meta a.a.)","selic",v=>fmt(v,2)+"%",C.selic,"taxa básica de juros"],
-      ["IPCA acum. 12m","ipca12",v=>fmt(v,2)+"%",C.ipca,"inflação oficial"],
-      ["Câmbio","dolar",v=>"R$ "+fmt(v,2),C.dolar,"por US$ 1"],
-      ["Desemprego","desemprego",v=>fmt(v,1)+"%",C.desemp,"PNAD Contínua"],
-      ["Dívida/PIB","dividaPib",v=>fmt(v,1)+"%",C.divida,"governo geral, bruta"],
-      ["Base monetária","baseMon",v=>"R$ "+fmt(v/1e6,0)+" bi",C.base,"saldo"],
-      ["IBC-Br","ibcbr",v=>fmt(v,1),C.ibc,"atividade, índice"],
-      ["IPCA no mês","ipcaMes",v=>fmt(v,2)+"%",C.ipca,"último mês"]
-    ];
-    document.getElementById("cardsPainel").innerHTML=cs.map(([t,k,f,cor,sub])=>{
-      const u=ultimo(k);
-      return `<div class="metric" style="border-left-color:${cor}"><span>${t}</span><strong style="color:${cor}">${f(u.v)}</strong><span class="sub">${sub} · ${u.l} · ${FONTE[k]}</span></div>`;
-    }).join("");
-    // juros x inflação (últimos ~8 anos)
-    const sel=tail("selic",96), ipc=tail("ipca12",96);
-    document.getElementById("gJurosInf").innerHTML=lineChart(
-      [{name:"Selic",color:C.selic,vals:sel.vals},{name:"IPCA 12m",color:C.ipca,vals:ipc.vals}],
-      ipc.labels,{ylabel:"% a.a.",pctY:true});
-    const rSelic=ultimo("selic").v, rIpca=ultimo("ipca12").v, jrReal=(1+rSelic/100)/(1+rIpca/100)-1;
-    document.getElementById("txtJurosInf").innerHTML=`Juro real ex-post ≈ <span class="tag">${fmt(jrReal*100,2)}%</span> a.a. (Selic ${fmt(rSelic,2)}% descontada a inflação de ${fmt(rIpca,2)}%). Quando a linha azul fica bem acima da vermelha, a política monetária está apertada.`;
-    const dol=tail("dolar",120);
-    document.getElementById("gDolar").innerHTML=lineChart([{name:"R$/US$",color:C.dolar,vals:dol.vals}],dol.labels,{ylabel:"R$"});
-    const des=tail("desemprego",120);
-    document.getElementById("gDesemp").innerHTML=lineChart([{name:"desocupação",color:C.desemp,vals:des.vals}],des.labels,{ylabel:"%",pctY:true});
-    const div=tail("dividaPib",120);
-    document.getElementById("gDivida").innerHTML=lineChart([{name:"dívida/PIB",color:C.divida,vals:div.vals}],div.labels,{ylabel:"% PIB",pctY:true});
-    const ibc=tail("ibcbr",120);
-    document.getElementById("gIbc").innerHTML=lineChart([{name:"IBC-Br",color:C.ibc,vals:ibc.vals}],ibc.labels,{ylabel:"índice",W:1100,H:300});
-  }
-
-  /* ===== INFLAÇÃO & PLANO REAL ===== */
-  let modoInf="hiper";
-  function idxLabel(key,label){return DADOS[key].labels.indexOf(label);}
-  function renderInflacao(){
-    const d=DADOS.infHist;
-    let ini=0,fim=d.vals.length-1;
-    if(modoInf==="hiper"){ini=Math.max(0,idxLabel("infHist","01/1989"));fim=idxLabel("infHist","12/1996");if(fim<0)fim=d.vals.length-1;}
-    else if(modoInf==="moderna"){ini=idxLabel("infHist","01/2000");if(ini<0)ini=0;}
-    const vals=d.vals.slice(ini,fim+1),labels=d.labels.slice(ini,fim+1);
-    const markIdx=labels.indexOf("07/1994");
-    document.getElementById("gInfHist").innerHTML=lineChart(
-      [{name:"IGP-DI (% no mês)",color:C.ipca,vals}],labels,
-      {ylabel:"% ao mês",pctY:true,W:1100,H:360,mark:markIdx>=0?markIdx:null,markLabel:markIdx>=0?"Plano Real (jul/94)":""});
-    // pico
-    let pico=0,picoL=""; d.vals.forEach((v,i)=>{if(v>pico){pico=v;picoL=d.labels[i];}});
-    const jul94=d.vals[idxLabel("infHist","07/1994")], jun94=d.vals[idxLabel("infHist","06/1994")];
-    document.getElementById("planoBox").innerHTML=`<strong>Pico:</strong> ${fmt(pico,1)}% em um único mês (${picoL}). <strong>Plano Real:</strong> a inflação mensal caiu de <span class="tag">${fmt(jun94,1)}%</span> (jun/1994) para <span class="tag">${fmt(jul94,1)}%</span> (jul/1994) — e para ~1,5% em setembro. Foi uma das desinflações mais rápidas já vistas, sem recessão profunda.`;
-    // Cagan overlay: realidade vs modelo hipotético a partir de jun/1994
-    renderCagan();
-  }
-  function renderCagan(){
-    const d=DADOS.infHist;
-    const i0=idxLabel("infHist","01/1993"), iRef=idxLabel("infHist","06/1994"), i1=idxLabel("infHist","12/1996");
-    const real=d.vals.slice(i0,i1+1), labels=d.labels.slice(i0,i1+1);
-    // modelo Cagan: continua a partir de jun/94 acelerando (o que aconteceria sem reforma)
-    const modelo=real.map(()=>NaN);
-    const startRel=iRef-i0; let pi=d.vals[iRef]/100, accel=0.18;
-    for(let i=startRel;i<modelo.length;i++){ modelo[i]=pi*100; pi=Math.min(pi*(1+accel),50); }
-    document.getElementById("gCagan").innerHTML=lineChart(
-      [{name:"inflação real (IGP-DI)",color:C.ipca,vals:real},
-       {name:"modelo Cagan sem reforma",color:C.gold,vals:modelo,dash:true}],
-      labels,{ylabel:"% ao mês",pctY:true,W:1100,H:340,mark:startRel,markLabel:"Plano Real"});
-  }
-
-  /* ===== PHILLIPS ===== */
-  function renderPhillips(){
-    const des=DADOS.desemprego, ipc=DADOS.ipca12;
-    const mapa={}; des.labels.forEach((l,i)=>mapa[l]=des.vals[i]);
-    const pts=[]; ipc.labels.forEach((l,i)=>{ if(l in mapa){ const yr=+l.split("/")[1];
-      const cor=yr<=2017?"#4a9eff":yr<=2020?"#2ecaac":yr<=2023?"#fbbf24":"#f87171";
-      pts.push({x:mapa[l],y:ipc.vals[i],color:cor}); }});
-    const fit=ols(pts);
-    document.getElementById("gPhillips").innerHTML=scatter(pts,{xlabel:"taxa de desemprego",ylabel:"inflação (IPCA 12m)",fit});
-    document.getElementById("cardsPhillips").innerHTML=
-      `<div class="metric"><span>Inclinação estimada</span><strong style="color:${fit.b<0?C.ok:C.warn}">${fmt(fit.b,3)}</strong><span class="sub">${fit.b<0?"negativa (como a teoria)":"positiva (atípico)"}</span></div>`+
-      `<div class="metric"><span>R² do ajuste</span><strong>${fmt(fit.r2,3)}</strong><span class="sub">${fit.r2<0.2?"relação fraca":"relação moderada"}</span></div>`;
-    document.getElementById("txtPhillips").innerHTML=`Cada 1 ponto percentual de desemprego a mais está associado a <span class="tag">${fmt(fit.b,2)} p.p.</span> de inflação (${fit.b<0?"a mais quando o desemprego cai":"sinal atípico"}). O R² de ${fmt(fit.r2,2)} mostra que, no Brasil, desemprego e inflação têm relação <strong>${fit.r2<0.2?"fraca e instável":"moderada"}</strong> — choques de câmbio, alimentos e energia e as expectativas pesam tanto quanto o desemprego. Cores por período: azul 2014–17, verde 18–20, amarelo 21–23, vermelho 24+.`;
-  }
-
-  /* ===== SOLOW ===== */
-  const SOL_BR={s:0.17,alpha:0.45,n:0.006,g:0.012,delta:0.04,k0:1.0};
-  let pSol={...SOL_BR};
-  const brk=p=>p.n+p.g+p.delta;
-  const f=(k,p)=>Math.pow(Math.max(k,0),p.alpha);
-  const kstar=p=>Math.pow(p.s/brk(p),1/(1-p.alpha));
-  function simSol(p,T=300,dt=0.25){let k=p.k0;const K=[],Y=[],Cc=[];for(let t=0;t<=T;t+=dt){const y=f(k,p);K.push(k);Y.push(y);Cc.push((1-p.s)*y);k=Math.max(1e-9,k+(p.s*y-brk(p)*k)*dt);}return{K,Y,Cc,dt};}
-  const SOL_CTRL=[["s","s — taxa de poupança",0.02,0.6,0.01],["alpha","α — participação do capital",0.2,0.6,0.01],
-    ["n","n — crescimento populacional",0,0.03,0.001],["g","g — progresso técnico",0,0.04,0.001],
-    ["delta","δ — depreciação",0.01,0.12,0.005],["k0","k0 — capital inicial",0.1,8,0.1]];
-  function buildSolCtl(){
-    const el=document.getElementById("ctlSolow");
-    el.innerHTML=SOL_CTRL.map(([id,rot,mi,ma,st])=>`<label class="ctl"><span><small>${rot}</small>
-      <input type="range" data-id="${id}" min="${mi}" max="${ma}" step="${st}" value="${pSol[id]}"></span>
-      <input type="number" data-num="${id}" min="${mi}" max="${ma}" step="${st}" value="${pSol[id]}"></label>`).join("");
-    el.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",e=>{
-      const id=e.target.dataset.id||e.target.dataset.num,v=+e.target.value; if(!Number.isFinite(v))return;
-      pSol[id]=v; el.querySelectorAll(`[data-id="${id}"],[data-num="${id}"]`).forEach(x=>{if(x!==e.target)x.value=v;});
-      renderSolow();
-    }));
-  }
-  function renderSolow(){
-    const ks=kstar(pSol),ys=f(ks,pSol),cs=(1-pSol.s)*ys,kg=Math.pow(pSol.alpha/brk(pSol),1/(1-pSol.alpha));
-    document.getElementById("cardsSolow").innerHTML=
-      `<div class="metric"><span>k* estacionário</span><strong>${fmt(ks,2)}</strong><span class="sub">capital por trab. efetivo</span></div>`+
-      `<div class="metric"><span>Crescimento de longo prazo</span><strong>${fmt((pSol.n+pSol.g)*100,1)}%</strong><span class="sub">n+g ao ano</span></div>`+
-      `<div class="metric"><span>Consumo c*</span><strong>${fmt(cs,2)}</strong><span class="sub">regra de ouro em s=α=${fmt(pSol.alpha,2)}</span></div>`+
-      `<div class="metric"><span>Renda y*</span><strong>${fmt(ys,2)}</strong><span class="sub">produto por trab. efetivo</span></div>`;
-    const sim=simSol(pSol),n=sim.K.length,step=Math.max(1,Math.round(n/100));
-    const dec=a=>a.filter((_,i)=>i%step===0);
-    document.getElementById("gSolow").innerHTML=lineChart(
-      [{name:"k",color:C.selic,vals:dec(sim.K)},{name:"y",color:C.ibc,vals:dec(sim.Y)},{name:"c",color:C.gold,vals:dec(sim.Cc)}],
-      null,{ylabel:"por trab. efetivo",xlabel:"tempo"});
-    // c*(s)
-    const W=520,H=330,pad={t:24,r:16,b:46,l:56},b=brk(pSol);
-    const cst=s=>{const k=Math.pow(s/b,1/(1-pSol.alpha));return (1-s)*f(k,pSol);};
+  function gTempo(){const s=sim(p),n=s.K.length,step=Math.max(1,Math.round(n/110)),dec=a=>a.filter((_,i)=>i%step===0);
+    return lineChart([{name:"k",color:C.k,vals:dec(s.K)},{name:"y=f(k)",color:C.y,vals:dec(s.Y)},{name:"c",color:C.c,vals:dec(s.Cc)}],null,{ylabel:"por trab. efetivo",xlabel:`tempo (passos de ${s.dt})`});}
+  function gGold(){
+    const W=520,H=340,pad={t:22,r:16,b:46,l:54},b=brk(p);
+    const cst=s=>{const k=Math.pow(s/b,1/(1-p.alpha));return(1-s)*f(k,p);};
     let yMax=0;for(let s=.02;s<.98;s+=.01)yMax=Math.max(yMax,cst(s));yMax*=1.1;
-    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes([0,.25,.5,.75,1],[0,yMax*.25,yMax*.5,yMax*.75,yMax],0,1,0,yMax,W,H,pad,"taxa de poupança s","c*",x=>fmt(x,2),y=>fmt(y,1));
-    let pathD="";for(let i=0;i<=96;i++){const s=.02+i/100;const [sx,sy]=mapPoint(s,cst(s),0,1,0,yMax,W,H,pad);pathD+=(i?"L":"M")+sx.toFixed(1)+","+sy.toFixed(1);}
-    svg+=`<path d="${pathD}" stroke="${C.gold}" stroke-width="2.6" fill="none"/>`;
-    const [gx,gy]=mapPoint(pSol.alpha,cst(pSol.alpha),0,1,0,yMax,W,H,pad);
+    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes([0,.25,.5,.75,1],[0,yMax*.25,yMax*.5,yMax*.75,yMax].map(v=>+v.toFixed(2)),0,1,0,yMax,W,H,pad,"taxa de poupança/investimento s","c*",x=>fmt(x,2),y=>fmt(y,1));
+    svg+=`<path d="${pathFn(s=>cst(s),0.02,0.98,0,yMax,W,H,pad)}" stroke="${C.c}" stroke-width="2.8" fill="none"/>`;
+    const[gx,gy]=mapPoint(p.alpha,cst(p.alpha),0,1,0,yMax,W,H,pad);
     svg+=`<line x1="${gx}" y1="${pad.t}" x2="${gx}" y2="${H-pad.b}" stroke="${C.gold}" stroke-dasharray="6 5"/><circle cx="${gx}" cy="${gy}" r="5" fill="${C.gold}"/><text x="${gx+7}" y="${gy-7}" fill="${C.gold}" font-size="11">ouro s=α</text>`;
-    const [sx,sy]=mapPoint(pSol.s,cst(pSol.s),0,1,0,yMax,W,H,pad);
-    svg+=`<circle cx="${sx}" cy="${sy}" r="5" fill="${C.EQ}"/><text x="${sx+7}" y="${sy+14}" fill="${C.EQ}" font-size="11">Brasil s=${fmt(pSol.s,2)}</text></svg>`;
-    document.getElementById("gSolowGold").innerHTML=svg;
-    // texto: crescimento real do IBC-Br anualizado (média das variações 12m)
-    const ibc=DADOS.ibcbr; const anos=Math.min(120,ibc.vals.length-12); let soma=0,c=0;
-    for(let i=ibc.vals.length-anos;i<ibc.vals.length;i++){if(i-12>=0){soma+=(ibc.vals[i]/ibc.vals[i-12]-1);c++;}}
-    const crescReal=c?soma/c*100:0;
-    document.getElementById("txtSolow").innerHTML=`Com a poupança brasileira (~<span class="tag">${fmt(pSol.s*100,0)}%</span> do PIB), o modelo aponta crescimento de longo prazo de <span class="tag">${fmt((pSol.n+pSol.g)*100,1)}%</span> ao ano (n+g). Nos dados, o IBC-Br cresceu em média <span class="tag">${fmt(crescReal,1)}%</span> ao ano no período recente — na mesma ordem de grandeza. A lição do Solow para o Brasil: como a poupança (s=${fmt(pSol.s,2)}) está <strong>abaixo</strong> da regra de ouro (α=${fmt(pSol.alpha,2)}), poupar e investir mais elevaria a renda de longo prazo — mas exige sacrificar consumo hoje. Tecnologia (g) é o único motor de crescimento sustentado da renda por pessoa.`;
-  }
-
-  /* ===== SIMULADOR IS-LM-BP + DA-OA (curto e médio prazo) ===== */
-  const PAD_IM={a:0.6,b:0.8,t:0.25,I0:2.5,d:0.5,G:3.0,nx:1.5,mx:0.10,v:0.3,e:1.0,M:8.0,P:1.0,k:0.8,h:1.5,Y_n:10.0,P_e:1.0,gamma:0.6,pi_e:0.02,lam:0.4,r_f:0.04,phi:0.5};
-  const GRUPOS_IM=[
-    ["Mercado de bens, IS",[["a","a, consumo autônomo",0,2,0.01],["b","b, propensão marginal a consumir",0.05,0.95,0.01],["t","t, alíquota de imposto",0,0.60,0.01],["I0","I0, investimento autônomo",0,6,0.05],["d","d, sensibilidade do investimento a r",0.05,2.5,0.05],["G","G, gasto do governo",0,8,0.05]]],
-    ["Economia aberta, BP",[["nx","NX0, exportações líquidas autônomas",-3,5,0.05],["mx","m, propensão a importar",0,0.50,0.01],["v","v, sensibilidade cambial de NX",0,1.5,0.01],["e","e, taxa real de câmbio",0.2,2.5,0.01],["r_f","rf, juro externo",-0.05,0.20,0.005]]],
-    ["Mercado monetário, LM",[["M","M, oferta nominal de moeda",1,20,0.1],["P","P, nível de preços inicial",0.2,3,0.01],["k","k, demanda por moeda ligada à renda",0.1,2,0.01],["h","h, demanda por moeda ligada a juros",0.1,6,0.05]]],
-    ["Oferta agregada e médio prazo",[["Y_n","Yn, produto natural",5,15,0.1],["P_e","Pe, preço esperado",0.2,3,0.01],["gamma","γ, inclinação da OA de curto prazo",0.1,2.5,0.05],["pi_e","πe, inflação esperada",-0.05,0.15,0.005],["lam","λ, sensibilidade da Phillips",0,2,0.05],["phi","φ, velocidade de ajuste (médio prazo)",0.05,1.5,0.05]]]
-  ];
-  const CHOQUES_IM={nenhum:["Sem choque",{}],fiscal:["Expansão fiscal, G + 2",{G:2.0}],imposto:["Aumento de impostos, t + 0,10",{t:0.10}],monetario:["Expansão monetária, M × 1,35",{M_mul:1.35}],investim:["Otimismo dos investidores, I0 + 1,5",{I0:1.5}],cambio:["Desvalorização cambial, e + 0,4",{e:0.4}],oferta:["Choque adverso de oferta, Pe + 0,4",{P_e:0.4}]};
-  const INFO_MULT_IM={
-    "α keynesiano":{cor:C.selic,txt:"Converte gasto autônomo em variação total do produto; impostos e importações vazam."},
-    "Fiscal, dY/dG":{cor:C.selic,txt:"G sobe → IS e DA à direita; Y sobe, mas r também (efeito expulsão)."},
-    "Juros fiscais, dr/dG":{cor:C.selic,txt:"Quanto o juro sobe quando o governo gasta mais."},
-    "Tributário, dY/dt":{cor:C.ipca,txt:"Imposto maior corta renda disponível, consumo e produto."},
-    "Monetário, dY/dM":{cor:C.ibc,txt:"M sobe → LM à direita, r cai, investimento e produto sobem."},
-    "Liquidez, dr/dM":{cor:C.ibc,txt:"Queda do juro causada pela expansão monetária."},
-    "Investimento, dY/dI0":{cor:C.dolar,txt:"Choque de confiança opera como expansão fiscal."},
-    "Índice de expulsão":{cor:C.base,txt:"Pressão dos juros sobre o investimento após estímulo fiscal."}
-  };
-  let pIM={...PAD_IM};
-  const mfIM=(b,t,mx)=>1/(1-b*(1-t)+mx);
-  const AbIM=p=>p.a+p.I0+p.G+p.nx;
-  const isIM=(Y,p)=>(AbIM(p)-p.v*p.e-Y/mfIM(p.b,p.t,p.mx))/p.d;
-  const lmIM=(Y,p)=>(p.k*Y-p.M/p.P)/p.h;
-  const bpIM=(Y,p)=>p.r_f+(p.mx*Y-p.nx+p.v*p.e)/5;
-  const bpValIM=(Y,r,p)=>(p.nx-p.mx*Y-p.v*p.e)+5*(r-p.r_f);
-  function eqIM(p){const al=mfIM(p.b,p.t,p.mx);const num=(AbIM(p)-p.v*p.e)/p.d+p.M/(p.P*p.h);const den=1/(al*p.d)+p.k/p.h;const Y=num/den;return{Y,r:lmIM(Y,p)};}
-  const daIM=(P,p)=>{const al=mfIM(p.b,p.t,p.mx);return (al*(AbIM(p)-p.v*p.e)*p.h+al*p.d*(p.M/P))/(p.h+al*p.d*p.k);};
-  const oaIM=(P,p)=>p.Y_n+(P-p.P_e)/p.gamma;
-  function eqOADAIM(p){const g=P=>daIM(P,p)-oaIM(P,p);let lo=0.05,hi=14,Pe=p.P_e;if(g(lo)*g(hi)<0){for(let i=0;i<80;i++){const m=(lo+hi)/2;if(g(lo)*g(m)<=0)hi=m;else lo=m;}Pe=(lo+hi)/2;}return{Y:daIM(Pe,p),P:Pe};}
-  const philIM=(Y,p)=>p.pi_e+p.lam*(Y-p.Y_n)/p.Y_n;
-  function choqueIM(p){const key=document.getElementById("choqueIM").value;if(key==="nenhum")return null;const sp={...p},delta=CHOQUES_IM[key][1];Object.entries(delta).forEach(([k,v])=>{if(k==="M_mul")sp.M=p.M*v;else sp[k]=p[k]+v;});return sp;}
-  function simMedioIM(pBase,pShock,N){
-    const p0=pShock||pBase;
-    function srP(p,Pe){const g=P=>daIM(P,p)-(p.Y_n+(P-Pe)/p.gamma);let lo=0.02,hi=20;if(g(lo)*g(hi)>0)return Pe;for(let i=0;i<70;i++){const m=(lo+hi)/2;if(g(lo)*g(m)<=0)hi=m;else lo=m;}return (lo+hi)/2;}
-    let Pe=pBase.P_e,Pprev=eqOADAIM(pBase).P;const Y=[],P=[],PI=[];
-    Y.push(eqOADAIM(pBase).Y);P.push(Pprev);PI.push(0);
-    for(let t=1;t<=N;t++){const P_t=srP(p0,Pe);const Y_t=p0.Y_n+(P_t-Pe)/p0.gamma;Y.push(Y_t);P.push(P_t);PI.push((P_t-Pprev)/Pprev);Pe=Pe+p0.phi*(P_t-Pe);Pprev=P_t;}
-    return {Y,P,PI};
-  }
-  function calcMultIM(p){
-    const base=eqIM(p);
-    const ch=(k,d)=>{const eq=eqIM({...p,[k]:p[k]+d});return{dY:eq.Y-base.Y,dr:eq.r-base.r};};
-    const sG=ch("G",1),st=ch("t",0.01),sM=ch("M",1),sI=ch("I0",1),al=mfIM(p.b,p.t,p.mx);
-    return [["α keynesiano",al,"",""],["Fiscal, dY/dG",sG.dY,sG.dY,sG.dr],["Juros fiscais, dr/dG",sG.dr,"",sG.dr],["Tributário, dY/dt",st.dY*100,st.dY*100,st.dr*100],["Monetário, dY/dM",sM.dY,sM.dY,sM.dr],["Liquidez, dr/dM",sM.dr,"",sM.dr],["Investimento, dY/dI0",sI.dY,sI.dY,sI.dr],["Índice de expulsão",sG.dY!==0?-sG.dr/sG.dY:0,"",""]];
-  }
-  function pathXY(fn,xMin,xMax,yMin,yMax,W,H,pad,steps){steps=steps||260;const pts=[];for(let i=0;i<=steps;i++){const x=xMin+(i/steps)*(xMax-xMin),y=fn(x);if(Number.isFinite(y)&&y>=yMin-1&&y<=yMax+1){const [sx,sy]=mapPoint(x,y,xMin,xMax,yMin,yMax,W,H,pad);pts.push((pts.length?"L":"M")+sx.toFixed(1)+","+sy.toFixed(1));}}return pts.join(" ");}
-  function pathParam(fn,tMin,tMax,xMin,xMax,yMin,yMax,W,H,pad,steps){steps=steps||260;const pts=[];for(let i=0;i<=steps;i++){const t=tMin+(i/steps)*(tMax-tMin),o=fn(t);if(Number.isFinite(o.x)&&Number.isFinite(o.y)&&o.x>=xMin-2&&o.x<=xMax+2&&o.y>=yMin-1&&o.y<=yMax+1){const [sx,sy]=mapPoint(o.x,o.y,xMin,xMax,yMin,yMax,W,H,pad);pts.push((pts.length?"L":"M")+sx.toFixed(1)+","+sy.toFixed(1));}}return pts.join(" ");}
-  function gISLM_IM(p,sp){
-    const W=560,H=380,pad={t:26,r:20,b:50,l:56},xMin=2,xMax=16,yMin=-0.5,yMax=6;
-    const eq0=eqIM(p),eq1=sp?eqIM(sp):null;
-    const [ex,ey]=mapPoint(eq0.Y,eq0.r,xMin,xMax,yMin,yMax,W,H,pad);
-    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes([4,6,8,10,12,14],[0,1,2,3,4,5],xMin,xMax,yMin,yMax,W,H,pad,"Y","r");
-    svg+=`<path d="${pathXY(Y=>isIM(Y,p),xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.selic}" stroke-width="3" fill="none"/>`;
-    svg+=`<path d="${pathXY(Y=>lmIM(Y,p),xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.ibc}" stroke-width="3" fill="none"/>`;
-    svg+=`<path d="${pathXY(Y=>bpIM(Y,p),xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.divida}" stroke-width="3" fill="none"/>`;
-    if(sp){svg+=`<path d="${pathXY(Y=>isIM(Y,sp),xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.base}" stroke-width="2.4" stroke-dasharray="7 6" fill="none"/>`;
-      svg+=`<path d="${pathXY(Y=>lmIM(Y,sp),xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.gold}" stroke-width="2.4" stroke-dasharray="7 6" fill="none"/>`;
-      const e1=mapPoint(eq1.Y,eq1.r,xMin,xMax,yMin,yMax,W,H,pad);
-      svg+=`<circle cx="${e1[0]}" cy="${e1[1]}" r="6" fill="${C.base}"/><text x="${e1[0]+9}" y="${e1[1]-9}" fill="${C.base}" font-size="11">E1</text>`;}
-    svg+=`<circle cx="${ex}" cy="${ey}" r="6" fill="${C.EQ}"/><text x="${ex+9}" y="${ey-9}" fill="${C.EQ}" font-size="11">E0</text>`;
-    svg+=`<text x="70" y="42" fill="${C.selic}" font-size="12">IS</text><text x="100" y="42" fill="${C.ibc}" font-size="12">LM</text><text x="132" y="42" fill="${C.divida}" font-size="12">BP</text>`;
+    const[sx,sy]=mapPoint(p.s,cst(p.s),0,1,0,yMax,W,H,pad);
+    svg+=`<circle cx="${sx}" cy="${sy}" r="5" fill="${C.EQ}"/><text x="${sx+7}" y="${sy+15}" fill="${C.EQ}" font-size="11">Brasil s=${fmt(p.s,2)}</text>`;
     return svg+`</svg>`;
   }
-  function gOADA_IM(p,sp){
-    const W=560,H=380,pad={t:26,r:20,b:50,l:56},xMin=2,xMax=16,yMin=0.2,yMax=3.2;
-    const eq0=eqOADAIM(p),eq1=sp?eqOADAIM(sp):null;
-    const [ex,ey]=mapPoint(eq0.Y,eq0.P,xMin,xMax,yMin,yMax,W,H,pad);
-    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes([4,6,8,10,12,14],[0.5,1,1.5,2,2.5,3],xMin,xMax,yMin,yMax,W,H,pad,"Y","P");
-    svg+=`<path d="${pathParam(P=>({x:daIM(P,p),y:P}),yMin,yMax,xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.selic}" stroke-width="3" fill="none"/>`;
-    svg+=`<path d="${pathParam(P=>({x:oaIM(P,p),y:P}),yMin,yMax,xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.ipca}" stroke-width="3" fill="none"/>`;
-    const [ynx]=mapPoint(p.Y_n,yMin,xMin,xMax,yMin,yMax,W,H,pad);
-    svg+=`<line x1="${ynx}" y1="${pad.t}" x2="${ynx}" y2="${H-pad.b}" stroke="${C.gold}" stroke-width="2.5" stroke-dasharray="6 5"/>`;
-    if(sp){svg+=`<path d="${pathParam(P=>({x:daIM(P,sp),y:P}),yMin,yMax,xMin,xMax,yMin,yMax,W,H,pad)}" stroke="${C.base}" stroke-width="2.4" stroke-dasharray="7 6" fill="none"/>`;
-      const e1=mapPoint(eq1.Y,eq1.P,xMin,xMax,yMin,yMax,W,H,pad);
-      svg+=`<circle cx="${e1[0]}" cy="${e1[1]}" r="6" fill="${C.base}"/><text x="${e1[0]+9}" y="${e1[1]-9}" fill="${C.base}" font-size="11">E1</text>`;}
-    svg+=`<circle cx="${ex}" cy="${ey}" r="6" fill="${C.EQ}"/><text x="${ex+9}" y="${ey-9}" fill="${C.EQ}" font-size="11">E0</text>`;
-    svg+=`<text x="70" y="42" fill="${C.selic}" font-size="12">DA</text><text x="104" y="42" fill="${C.ipca}" font-size="12">OA CP</text><text x="158" y="42" fill="${C.gold}" font-size="12">OA LP</text>`;
-    return svg+`</svg>`;
-  }
-  function buildCtlIM(){
-    const alvo=document.getElementById("ctlIM");
-    alvo.innerHTML=GRUPOS_IM.map(([titulo,itens])=>{
-      const linhas=itens.map(([id,rot,mi,ma,st])=>`<label class="ctl"><span><small>${rot}</small><input type="range" data-id="${id}" min="${mi}" max="${ma}" step="${st}" value="${pIM[id]}"></span><input type="number" data-num="${id}" min="${mi}" max="${ma}" step="${st}" value="${pIM[id]}"></label>`).join("");
-      return `<details open><summary>${titulo}</summary>${linhas}</details>`;
-    }).join("");
-    alvo.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",e=>{const id=e.target.dataset.id||e.target.dataset.num,v=+e.target.value;if(!Number.isFinite(v))return;pIM[id]=v;alvo.querySelectorAll(`[data-id="${id}"],[data-num="${id}"]`).forEach(x=>{if(x!==e.target)x.value=v;});renderIM();}));
-  }
-  function renderIM(){
-    const sp=choqueIM(pIM);
-    const islm=eqIM(pIM),oada=eqOADAIM(pIM),bp=bpValIM(islm.Y,islm.r,pIM);
-    const sim=simMedioIM(pIM,sp,28);
-    const s2=sp?eqIM(sp):null,o2=sp?eqOADAIM(sp):null;
-    const cards=[["Curto prazo Y (IS-LM)",fmt(islm.Y,3),s2?`choque ${fmt(s2.Y,3)}`:"preços fixos"],
-      ["Juros r",fmt(islm.r,3),s2?`choque ${fmt(s2.r,3)}`:"base"],
-      ["Médio prazo Y",fmt(sim.Y[sim.Y.length-1],3),`→ natural ${fmt(pIM.Y_n,1)}`],
-      ["Preço P (médio)",fmt(sim.P[sim.P.length-1],3),o2?`choque ${fmt(o2.P,3)}`:"base"],
-      ["Balanço BP",fmt(bp,3),bp>=0?"superávit":"déficit"]];
-    document.getElementById("metIM").innerHTML=cards.map(([t,v,s])=>`<div class="metric"><span>${t}</span><strong>${v}</strong><span class="sub">${s}</span></div>`).join("");
-    document.getElementById("gISLMim").innerHTML=gISLM_IM(pIM,sp);
-    document.getElementById("gOADAim").innerHTML=gOADA_IM(pIM,sp);
-    document.getElementById("gYtim").innerHTML=lineChart([{name:"Y (produto)",color:C.selic,vals:sim.Y},{name:"Yn (natural)",color:C.gold,vals:sim.Y.map(()=>pIM.Y_n)}],null,{ylabel:"Y",xlabel:"períodos após o choque",marks:sp?[{i:0,label:"choque",color:C.base}]:null});
-    document.getElementById("gPitim").innerHTML=lineChart([{name:"inflação π",color:C.ibc,vals:sim.PI},{name:"nível P",color:C.ipca,vals:sim.P}],null,{ylabel:"π e P",xlabel:"períodos"});
-    const rows=calcMultIM(pIM);
-    document.getElementById("tabMultIM").innerHTML=`<thead><tr><th>Multiplicador</th><th>Valor</th><th>dY</th><th>dr</th><th>Interpretação</th></tr></thead><tbody>`+rows.map(([n,v,dY,dr])=>{const info=INFO_MULT_IM[n];return `<tr><td><strong style="color:${info?info.cor:C.text}">${n}</strong></td><td>${fmt(v,4)}</td><td>${dY===""?"":fmt(dY,4)}</td><td>${dr===""?"":fmt(dr,4)}</td><td>${info?info.txt:""}</td></tr>`;}).join("")+`</tbody>`;
-  }
-  function initIM(){
-    const sel=document.getElementById("choqueIM");
-    sel.innerHTML=Object.entries(CHOQUES_IM).map(([k,[l]])=>`<option value="${k}">${l}</option>`).join("");
-    sel.addEventListener("change",renderIM);
-    document.getElementById("restIM").addEventListener("click",()=>{pIM={...PAD_IM};sel.value="nenhum";buildCtlIM();renderIM();});
-    buildCtlIM();
+  function gFBCF(){const t=taxaInvest();const step=Math.max(1,Math.round(t.serie.length/80));const dec=a=>a.filter((_,i)=>i%step===0);
+    return lineChart([{name:"taxa de investimento (FBCF, est.)",color:C.inv,vals:dec(t.serie)}],dec(t.labels),{ylabel:"% do PIB",pctY:true});}
+
+  function render(){
+    const ks=kstar(p),ys=f(ks,p),cs=(1-p.s)*ys,b=brk(p),kg=kgold(p),cg=(1-p.alpha)*f(kg,p);
+    const t=taxaInvest();
+    document.getElementById("cards").innerHTML=[
+      ["Taxa de investimento s",fmt(p.s*100,1)+"%",C.inv,`FBCF real · ${t.ultimoL} · ${FONTE.fbcf||"?"}`],
+      ["k* estado estacionário",fmt(ks,2),C.k,`quebra n+g+δ=${fmt(b*100,1)}%`],
+      ["Crescimento de longo prazo",fmt((p.n+p.g)*100,1)+"%",C.c,"n+g ao ano"],
+      ["Consumo c*",fmt(cs,2),C.gold,`ouro máx ${fmt(cg,2)} em s=α`]
+    ].map(([tt,v,cor,s])=>`<div class="metric" style="border-left-color:${cor}"><span>${tt}</span><strong style="color:${cor}">${v}</strong><span class="sub">${s}</span></div>`).join("");
+    document.getElementById("gFase").innerHTML=gFase();
+    document.getElementById("gTempo").innerHTML=gTempo();
+    document.getElementById("gGold").innerHTML=gGold();
+    document.getElementById("gFBCF").innerHTML=gFBCF();
+    // crescimento real IBC-Br
+    const ibc=DADOS.ibcbr,an=Math.min(120,ibc.vals.length-12);let soma=0,cc=0;
+    for(let i=ibc.vals.length-an;i<ibc.vals.length;i++){if(i-12>=0){soma+=ibc.vals[i]/ibc.vals[i-12]-1;cc++;}}
+    const cresc=cc?soma/cc*100:0,dif=p.s-p.alpha;
+    document.getElementById("leitura").innerHTML=
+      `<p>Com a taxa de investimento real do Brasil (<span class="tag">${fmt(p.s*100,1)}%</span> do PIB, da FBCF do BCB), o modelo aponta crescimento de longo prazo de <span class="tag">${fmt((p.n+p.g)*100,1)}%</span> ao ano (n+g). Nos dados, o IBC-Br cresceu em média <span class="tag">${fmt(cresc,1)}%</span> ao ano no período recente — mesma ordem de grandeza.</p>`+
+      `<p>${Math.abs(dif)<0.01?`Você está <strong>na regra de ouro</strong> (s≈α): consumo de longo prazo máximo.`:dif<0?`A poupança do Brasil (s=${fmt(p.s,2)}) está <strong>abaixo</strong> da regra de ouro (α=${fmt(p.alpha,2)}): investir mais elevaria a renda de longo prazo — mas custa consumo hoje. É o principal gargalo estrutural do crescimento brasileiro.`:`Você poupa <strong>acima</strong> da regra de ouro (s=${fmt(p.s,2)} > α=${fmt(p.alpha,2)}): dá para consumir mais reduzindo a poupança (ineficiência dinâmica).`}</p>`+
+      `<p>Lembre: no longo prazo, só o <strong>progresso técnico g</strong> sustenta o crescimento da renda <em>por pessoa</em>. Poupar mais eleva o nível da renda, mas não a taxa de crescimento permanente.</p>`;
   }
 
-  /* ===== CURTO → LONGO CONECTADO (IS-LM-BP + Solow) ===== */
-  // IS-LM-BP estilizado (calibração Brasil: b=0.7, carga t=0.33). Diagrama qualitativo do impacto.
-  const PISLM={a:0.6,b:0.7,t:0.33,I0:2.5,d:0.5,G:3.0,nx:1.5,mx:0.10,v:0.3,e:1.0,M:8.0,P:1.0,k:0.8,h:1.5,r_f:0.5};
-  const multF_C=p=>1/(1-p.b*(1-p.t)+p.mx);
-  const Abar_C=p=>p.a+p.I0+p.G+p.nx;
-  const IS_rC=(Y,p)=>(Abar_C(p)-p.v*p.e-Y/multF_C(p))/p.d;
-  const LM_rC=(Y,p)=>(p.k*Y-p.M/p.P)/p.h;
-  const BP_rC=(Y,p)=>p.r_f+(p.mx*Y-p.nx+p.v*p.e)/5;
-  function eqISLM_C(p){const al=multF_C(p);const num=(Abar_C(p)-p.v*p.e)/p.d+p.M/(p.P*p.h);const den=1/(al*p.d)+p.k/p.h;const Y=num/den;return{Y,r:LM_rC(Y,p)};}
-  let pConect={dG:2,dGperm:false,dC:0,dT:0,dTsaved:true,rho:0.55,anos:45};
-  function simConect(c){
-    const s0=0.17,alpha=0.45,brk=0.006+0.012+0.04;   // ponytail: s0=0.17 chumbado (~FBCF/PIB do Brasil), puxar série real do BCB se precisar de rigor
-    const mult=multF_C(PISLM);
-    const autShock=c.dG+c.dC-0.7*c.dT;               // choque autônomo de demanda (% PIB); impostos derrubam via PMC
-    const D0=mult*autShock/100;                       // desvio do produto no impacto (fração)
-    // poupança estrutural de longo prazo: consumo e G-sem-financiamento reduzem s; imposto poupado eleva s
-    let s=s0 - c.dC/100 - (c.dGperm?c.dG/100:0) + (c.dTsaved?c.dT/100:0);
-    s=clamp(s,0.02,0.6);
-    const k0=Math.pow(s0/brk,1/(1-alpha));            // economia começa no estado estacionário atual
-    let k=k0,gap=D0; const yPot=[],yAct=[],yBase=[];
-    for(let t=0;t<=c.anos;t++){
-      const pot=100*Math.pow(k/k0,alpha);             // produto potencial destendenciado (base 100)
-      yBase.push(100); yPot.push(pot); yAct.push(pot*(1+gap));
-      k=k+s*Math.pow(k,alpha)-brk*k;                  // Solow: capital acumula com a poupança estrutural
-      gap*=c.rho;                                      // choque de demanda decai (ajuste de médio prazo)
-    }
-    return {yPot,yAct,yBase,D0,s,s0,mult,autShock,longEff:yPot[yPot.length-1]-100};
+  function buildCtl(){
+    const CT=[["s","s, taxa de poupança/investimento",0.02,0.6,0.01],["alpha","α, participação do capital",0.2,0.6,0.01],
+      ["n","n, crescimento populacional",0,0.03,0.001],["g","g, progresso técnico",0,0.04,0.001],
+      ["delta","δ, depreciação",0.01,0.12,0.005],["k0","k0, capital inicial",0.1,8,0.1]];
+    const el=document.getElementById("ctl");
+    el.innerHTML=CT.map(([id,rot,mi,ma,st])=>`<label class="ctl"><span><small>${rot}</small><input type="range" data-id="${id}" min="${mi}" max="${ma}" step="${st}" value="${p[id]}"></span><input type="number" data-num="${id}" min="${mi}" max="${ma}" step="${st}" value="${p[id]}"></label>`).join("");
+    el.querySelectorAll("input").forEach(inp=>inp.addEventListener("input",e=>{const id=e.target.dataset.id||e.target.dataset.num,v=+e.target.value;if(!Number.isFinite(v))return;p[id]=v;el.querySelectorAll(`[data-id="${id}"],[data-num="${id}"]`).forEach(x=>{if(x!==e.target)x.value=v;});render();}));
   }
-  function gISLM_C(c){
-    const W=520,H=360,pad={t:26,r:18,b:48,l:52},xMin=2,xMax=16,yMin=-0.5,yMax=6;
-    const p0={...PISLM},eq0=eqISLM_C(p0);
-    const autShock=c.dG+c.dC-0.7*c.dT;
-    const p1={...p0,I0:p0.I0+(autShock/100)*eq0.Y};
-    const eq1=eqISLM_C(p1),temChoque=Math.abs(autShock)>1e-6;
-    const path=(fn,st,w,dash)=>{let d="";for(let i=0;i<=200;i++){const Y=xMin+i/200*(xMax-xMin),r=fn(Y);if(r>=yMin&&r<=yMax){const[sx,sy]=mapPoint(Y,r,xMin,xMax,yMin,yMax,W,H,pad);d+=(d?"L":"M")+sx.toFixed(1)+","+sy.toFixed(1);}}return `<path d="${d}" stroke="${st}" stroke-width="${w}" fill="none"${dash?' stroke-dasharray="7 6"':''}/>`;};
-    let svg=`<svg viewBox="0 0 ${W} ${H}">`+axes([4,6,8,10,12,14],[0,1,2,3,4,5],xMin,xMax,yMin,yMax,W,H,pad,"produto Y (índice)","juro r (estilizado)");
-    svg+=path(Y=>IS_rC(Y,p0),C.selic,3)+path(Y=>LM_rC(Y,p0),C.ibc,3)+path(Y=>BP_rC(Y,p0),C.divida,2.4);
-    if(temChoque)svg+=path(Y=>IS_rC(Y,p1),C.warn,2.4,true);
-    const e0=mapPoint(eq0.Y,eq0.r,xMin,xMax,yMin,yMax,W,H,pad),e1=mapPoint(eq1.Y,eq1.r,xMin,xMax,yMin,yMax,W,H,pad);
-    svg+=`<circle cx="${e0[0]}" cy="${e0[1]}" r="5.5" fill="${C.EQ}"/><text x="${e0[0]+8}" y="${e0[1]-8}" fill="${C.EQ}" font-size="11">E0</text>`;
-    if(temChoque)svg+=`<circle cx="${e1[0]}" cy="${e1[1]}" r="5.5" fill="${C.warn}"/><text x="${e1[0]+8}" y="${e1[1]-8}" fill="${C.warn}" font-size="11">E1</text>`;
-    svg+=`<text x="70" y="42" fill="${C.selic}" font-size="12">IS</text><text x="100" y="42" fill="${C.ibc}" font-size="12">LM</text><text x="132" y="42" fill="${C.divida}" font-size="12">BP</text>`;
-    return svg+`</svg>`;
-  }
-  function buildConectCtl(){
-    const el=document.getElementById("ctlConect");
-    el.innerHTML=`
-     <label class="ctl"><span><small>Gasto público ΔG (% do PIB)</small><input type="range" data-k="dG" min="-4" max="8" step="0.5" value="${pConect.dG}"></span><input type="number" data-n="dG" min="-4" max="8" step="0.5" value="${pConect.dG}"></label>
-     <label style="display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;margin:2px 0 10px"><input type="checkbox" data-c="dGperm" ${pConect.dGperm?"checked":""}> ΔG permanente e não financiado (reduz a poupança nacional)</label>
-     <label class="ctl"><span><small>Aumento estrutural do consumo (% do PIB) — reduz a poupança</small><input type="range" data-k="dC" min="0" max="8" step="0.5" value="${pConect.dC}"></span><input type="number" data-n="dC" min="0" max="8" step="0.5" value="${pConect.dC}"></label>
-     <label class="ctl"><span><small>Variação de impostos ΔT (% do PIB)</small><input type="range" data-k="dT" min="-4" max="8" step="0.5" value="${pConect.dT}"></span><input type="number" data-n="dT" min="-4" max="8" step="0.5" value="${pConect.dT}"></label>
-     <label style="display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;margin:2px 0 10px"><input type="checkbox" data-c="dTsaved" ${pConect.dTsaved?"checked":""}> impostos viram poupança pública (elevam s no longo prazo)</label>
-     <label class="ctl"><span><small>Persistência do ajuste ρ (mais alto = médio prazo mais lento)</small><input type="range" data-k="rho" min="0.1" max="0.9" step="0.05" value="${pConect.rho}"></span><input type="number" data-n="rho" min="0.1" max="0.9" step="0.05" value="${pConect.rho}"></label>
-     <label class="ctl"><span><small>Horizonte (anos)</small><input type="range" data-k="anos" min="10" max="60" step="1" value="${pConect.anos}"></span><input type="number" data-n="anos" min="10" max="60" step="1" value="${pConect.anos}"></label>
-     <div class="chips"><button id="cxTemp">Exemplo: expansão fiscal temporária</button><button id="cxConsumo">Exemplo: consumir mais, poupar menos</button></div>`;
-    el.querySelectorAll("input[type=range],input[type=number]").forEach(inp=>inp.addEventListener("input",e=>{
-      const k=e.target.dataset.k||e.target.dataset.n,v=+e.target.value;if(!Number.isFinite(v))return;pConect[k]=v;
-      el.querySelectorAll(`[data-k="${k}"],[data-n="${k}"]`).forEach(x=>{if(x!==e.target)x.value=v;});renderConect();}));
-    el.querySelectorAll("input[type=checkbox]").forEach(inp=>inp.addEventListener("change",e=>{pConect[e.target.dataset.c]=e.target.checked;renderConect();}));
-    document.getElementById("cxTemp").addEventListener("click",()=>{pConect={dG:3,dGperm:false,dC:0,dT:0,dTsaved:true,rho:0.55,anos:45};buildConectCtl();renderConect();});
-    document.getElementById("cxConsumo").addEventListener("click",()=>{pConect={dG:0,dGperm:false,dC:4,dT:0,dTsaved:true,rho:0.55,anos:45};buildConectCtl();renderConect();});
-  }
-  function renderConect(){
-    const r=simConect(pConect);
-    document.getElementById("gISLMbr").innerHTML=gISLM_C(pConect);
-    document.getElementById("txtISLM").innerHTML=`No impacto, o choque de demanda de <span class="tag">${fmt(r.autShock,1)}% do PIB</span> desloca a IS e leva o produto de E0 a E1 (multiplicador ≈ ${fmt(r.mult,2)}). Preços fixos: quem manda é a demanda.`;
-    document.getElementById("gTimeline").innerHTML=lineChart(
-      [{name:"produto efetivo",color:C.warn,vals:r.yAct},
-       {name:"potencial (Solow)",color:C.ibc,vals:r.yPot},
-       {name:"tendência sem choque",color:C.muted,vals:r.yBase,dash:true}],
-      null,{ylabel:"produto (índice, base 100)",xlabel:"anos",W:640,H:360,
-        marks:[{i:2,label:"curto",color:C.selic},{i:8,label:"médio → longo",color:C.gold}]});
-    const neutro=Math.abs(r.longEff)<0.05;
-    const corLong=neutro?C.muted:(r.longEff<0?C.warn:C.ibc);
-    const cards=[
-      ["Curto prazo (impacto)",(r.D0>=0?"+":"")+fmt(r.D0*100,1)+"%",C.warn,"desvio do produto no ano 0"],
-      ["Longo prazo (nível)",(r.longEff>=0?"+":"")+fmt(r.longEff,1)+"%",corLong,neutro?"≈ zero: só demanda":"permanente, via poupança"],
-      ["Poupança de longo prazo",fmt(r.s*100,1)+"%",C.gold,`vs. ${fmt(r.s0*100,0)}% inicial`]
-    ];
-    document.getElementById("cardsConect").innerHTML=cards.map(([t,v,cor,s])=>`<div class="metric" style="border-left-color:${cor}"><span>${t}</span><strong style="color:${cor}">${v}</strong><span class="sub">${s}</span></div>`).join("");
-    let corpo=`<p><strong>A regra:</strong> um choque puramente de <em>demanda</em> move o produto no curto prazo, mas os preços se ajustam e ele volta à tendência — <strong>efeito zero no longo prazo</strong>. A única ponte para o longo prazo é a <strong>taxa de poupança</strong>, que fixa o capital e a renda de estado estacionário no Solow.</p>`;
-    if(neutro) corpo+=`<p>Seu cenário é essencialmente de demanda: o produto varia ${fmt(r.D0*100,1)}% hoje e retorna à tendência. Longo prazo praticamente inalterado — a poupança segue em ${fmt(r.s*100,1)}%.</p>`;
-    else if(r.longEff<0) corpo+=`<p><strong>Consumir mais, poupar menos:</strong> o produto <em>sobe</em> ${fmt(r.D0*100,1)}% no curto prazo (a festa da demanda), mas a poupança cai para ${fmt(r.s*100,1)}% do PIB, o capital por trabalhador encolhe e o produto de longo prazo fica <strong>${fmt(r.longEff,1)}%</strong> abaixo. É o paradoxo que você queria ver: mais consumo hoje, país mais pobre amanhã.</p>`;
-    else corpo+=`<p><strong>Seu cenário eleva a poupança</strong> (${fmt(r.s0*100,0)}% → ${fmt(r.s*100,1)}%): pode custar demanda no curto prazo, mas eleva o capital e a renda de longo prazo em <strong>+${fmt(r.longEff,1)}%</strong>. É o trade-off do investimento/austeridade — dói agora, paga depois.</p>`;
-    document.getElementById("txtConect").innerHTML=corpo;
-  }
+  function usarReal(){p.s=clamp(+taxaInvest().s.toFixed(3),0.02,0.6);buildCtl();atualizaNota();render();}
+  function atualizaNota(){const t=taxaInvest();document.getElementById("notaS").innerHTML=`s puxado da <strong>FBCF real</strong> (BCB 22102): <span class="tag">${fmt(t.s*100,1)}%</span> do PIB em ${t.ultimoL}. Ajuste à vontade.`;}
 
-  /* ===== SOBRE ===== */
-  document.getElementById("sobreBody").innerHTML=`
-    <h2>De onde vêm os números</h2>
-    <p>Tudo é puxado ao vivo da <strong>API pública SGS do Banco Central</strong> (<code>api.bcb.gov.br</code>). Se a internet ou a API falhar, o site usa um retrato embutido (snapshot até ${SNAP_DATA}) — por isso funciona offline. Clique em <em>Atualizar</em> para rebuscar.</p>
-    <table><thead><tr><th>Indicador</th><th>Série SGS</th><th>Fonte</th></tr></thead><tbody>
-      <tr><td>IPCA acumulado 12 meses</td><td>13522</td><td>IBGE</td></tr>
-      <tr><td>IPCA no mês</td><td>433</td><td>IBGE</td></tr>
-      <tr><td>Meta Selic (% a.a.)</td><td>432</td><td>Copom/BCB</td></tr>
-      <tr><td>Câmbio R$/US$ (média mensal)</td><td>3698</td><td>BCB</td></tr>
-      <tr><td>Dívida bruta do governo geral (% PIB)</td><td>13762</td><td>BCB</td></tr>
-      <tr><td>Taxa de desocupação (PNAD)</td><td>24369</td><td>IBGE</td></tr>
-      <tr><td>IBC-Br (atividade)</td><td>24364</td><td>BCB</td></tr>
-      <tr><td>Base monetária (saldo)</td><td>1785</td><td>BCB</td></tr>
-      <tr><td>IGP-DI mensal (histórico da inflação)</td><td>190</td><td>FGV</td></tr>
-    </tbody></table>
-    <p style="margin-top:12px">Séries diárias (Selic) respeitam o limite de 10 anos por consulta da API. Os modelos (Solow, Phillips, Cagan) são os mesmos do projeto irmão de simulação teórica — aqui eles são <strong>confrontados com o dado real do Brasil</strong>.</p>`;
-
-  /* ===== abas / boot ===== */
-  const feito={};
-  function renderTab(t){
-    if(t==="painel")renderPainel();
-    else if(t==="inflacao")renderInflacao();
-    else if(t==="phillips")renderPhillips();
-    else if(t==="solow"){if(!feito.solow){buildSolCtl();feito.solow=1;}renderSolow();}
-    else if(t==="conectado"){if(!feito.conect){buildConectCtl();feito.conect=1;}renderConect();}
-    else if(t==="islm"){if(!feito.islm){initIM();feito.islm=1;}renderIM();}
-  }
-  document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>{
-    document.querySelectorAll("#tabs button").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".tabpane").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active"); document.getElementById("pane-"+b.dataset.tab).classList.add("active");
-    renderTab(b.dataset.tab);
-  }));
-  document.querySelectorAll("[data-inf]").forEach(b=>b.addEventListener("click",()=>{modoInf=b.dataset.inf;renderInflacao();}));
-  document.getElementById("btnCalibra").addEventListener("click",()=>{pSol={...SOL_BR};buildSolCtl();renderSolow();});
-  document.getElementById("btnGolden").addEventListener("click",()=>{pSol.s=pSol.alpha;buildSolCtl();renderSolow();});
-  document.getElementById("btnAtualizar").addEventListener("click",async()=>{
-    document.getElementById("statusFonte").innerHTML=`<span class="dot offline"></span> atualizando…`;
-    await carregar(); renderPainel(); const at=document.querySelector("#tabs button.active").dataset.tab; renderTab(at);
-  });
+  document.getElementById("btnReal").addEventListener("click",usarReal);
+  document.getElementById("btnGold").addEventListener("click",()=>{p.s=p.alpha;buildCtl();render();});
+  document.getElementById("btnAtualizar").addEventListener("click",async()=>{document.getElementById("statusFonte").innerHTML=`<span class="dot offline"></span> atualizando…`;await carregar();usarReal();});
 
   (async function boot(){
-    // começa no snapshot pra pintar rápido, troca por live quando chegar
     Object.keys(SGS).forEach(k=>{DADOS[k]=SNAP[k];FONTE[k]="offline";});
-    renderPainel(); atualizarStatus();
+    status();buildCtl();atualizaNota();render();
     await carregar();
-    renderPainel(); const at=document.querySelector("#tabs button.active").dataset.tab; renderTab(at);
+    usarReal();  // ao chegar o dado ao vivo, calibra s pela FBCF real
   })();
 
   /* ===== self-check ===== */
   (function(){
-    const p={s:0.3,alpha:0.4,n:0.01,g:0.02,delta:0.05,k0:1};
-    const ks=kstar(p); console.assert(Math.abs(p.s*f(ks,p)-brk(p)*ks)<1e-9,"Solow k* deve zerar k̇");
-    const t=ols([{x:1,y:2},{x:2,y:4},{x:3,y:6}]); console.assert(Math.abs(t.b-2)<1e-9&&Math.abs(t.r2-1)<1e-9,"OLS exato em reta perfeita");
-    console.assert(parseSGS([{data:"01/05/2026",valor:"1.5"},{data:"15/05/2026",valor:"2.5"}],true).vals[0]===2.5,"decimação diária pega último do mês");
-    // modelo conectado: choque temporário de demanda não muda o longo prazo; consumir mais empobrece no longo
-    const tmp=simConect({dG:3,dGperm:false,dC:0,dT:0,dTsaved:true,rho:0.55,anos:45});
-    console.assert(Math.abs(tmp.longEff)<0.02,"choque temporário de demanda: efeito ~0 no longo prazo");
-    const con=simConect({dG:0,dGperm:false,dC:4,dT:0,dTsaved:true,rho:0.55,anos:45});
-    console.assert(con.D0>0 && con.longEff<-1,"consumir mais: sobe no curto, cai no longo");
-    // IS-LM-BP + DA-OA: equilíbrio válido e retorno ao natural no médio prazo
-    console.assert(eqIM(PAD_IM).Y>0,"eqISLM Y>0");
-    const sm=simMedioIM(PAD_IM,{...PAD_IM,G:PAD_IM.G+2},60);
-    console.assert(Math.abs(sm.Y[sm.Y.length-1]-PAD_IM.Y_n)<0.05,"médio prazo: Y volta ao produto natural");
+    const q={s:0.3,alpha:0.4,n:0.01,g:0.02,delta:0.05,k0:1};
+    const ks=kstar(q);console.assert(Math.abs(q.s*f(ks,q)-brk(q)*ks)<1e-9,"k* deve zerar k̇");
+    console.assert(Math.abs(kgold({...q,s:q.alpha})-kstar({...q,s:q.alpha}))<1e-9,"na regra de ouro s=α: k*=k_ouro");
+    DADOS.fbcf={labels:["01/2020","01/2021"],vals:[100,200]};
+    console.assert(Math.abs(taxaInvest().s-ANCHOR*200/150)<1e-9,"taxa de investimento ancora na média da FBCF");
   })();
   </script>
 </body>

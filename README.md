@@ -1,45 +1,39 @@
-# Economia Brasileira: Dados Reais e Modelos
+# Solow — Crescimento de Longo Prazo do Brasil
 
-Dashboard **de arquivo único** que puxa as séries oficiais do Brasil **ao vivo** (API pública do Banco Central e IBGE) e as liga aos modelos de macroeconomia. Se cair a internet, usa um **snapshot embutido** — funciona offline do mesmo jeito.
+Página única que roda o **modelo de Solow calibrado com o investimento real do Brasil**. A taxa de poupança/investimento (`s`) vem da **Formação Bruta de Capital Fixo** publicada pelo Banco Central, puxada ao vivo (com backup offline).
 
 ### ▶ Abrir agora: **https://matheusassiso.github.io/economia-brasil-modelos/**
 
-Clica e usa direto no navegador — funciona no celular também.
+## O que faz
 
-## O que tem
+- **`s` a partir de dado real** — a série `22102` do SGS/BCB (FBCF, índice de volume) define a taxa de investimento do Brasil, ao vivo. Botão para recalibrar `s` com o dado atual, e slider para experimentar.
+- **Diagrama de fase** — `s·f(k)` vs `(n+g+δ)k`, com o estado estacionário `k*` e a regra de ouro marcados.
+- **Convergência no tempo** — trajetórias de `k`, `y` e `c` até o estado estacionário.
+- **Regra de ouro** — consumo de estado estacionário × poupança, com o `s` do Brasil e o `s = α` (ouro) marcados; diagnóstico de poupança abaixo/acima do ótimo.
+- **Investimento real** — a série da FBCF do Brasil ao longo do tempo.
+- **Comparação com o real** — o crescimento de longo prazo do modelo (`n+g`) confrontado com o crescimento médio do IBC-Br (série `24364`).
 
-**Painel Brasil** — os números do momento, ao vivo: Selic, IPCA (12m e no mês), câmbio R$/US$, desemprego (PNAD), dívida bruta/PIB, base monetária, IBC-Br. Cada card mostra o valor, o mês e se veio "ao vivo" ou do snapshot. Gráficos históricos de juros × inflação, câmbio, desemprego, dívida e atividade.
+## Sobre a taxa de investimento
 
-**Inflação & Plano Real** — a hiperinflação brasileira em dados reais (IGP-DI desde 1989). O pico de **~81% em um único mês** (mar/1990) e o **Plano Real** derrubando a inflação de 46% (jun/1994) para 5,5% (jul/1994). Com sobreposição do **modelo de Cagan**: a linha tracejada mostra como a inflação teria explodido sem a reforma monetária.
+O BCB **não publica a razão FBCF/PIB** como série pronta no SGS — só o índice de volume da FBCF (`22102`). Então `s` é estimado ancorando esse índice real na taxa média de investimento do Brasil (~17,5% do PIB, IBGE/Contas Nacionais), preservando as variações reais. Sempre ajustável no slider.
 
-**Curva de Phillips real** — cada mês (2014–hoje) como um ponto de desemprego × inflação, com a reta ajustada por mínimos quadrados sobre os dados brasileiros. Mostra que, no Brasil, a relação é fraca e instável.
+## Dados (BCB SGS, `api.bcb.gov.br`, CORS liberado)
 
-**Solow calibrado** — o modelo de crescimento com parâmetros do Brasil (poupança baixa, participação do capital alta). Compara o crescimento de longo prazo do modelo com o crescimento real do IBC-Br. Botões para calibrar com valores do Brasil e para a regra de ouro.
+| Uso | Série |
+|-----|-------|
+| Taxa de investimento (FBCF, volume) | 22102 |
+| Atividade / crescimento real (IBC-Br) | 24364 |
 
-**Curto → Longo (conectado)** — os três prazos ligados numa só linha do tempo. O IS-LM-BP dá o impacto de curto prazo de um choque de demanda; o Solow dá o longo prazo. A ponte é a **poupança**: um choque só de demanda volta à tendência (efeito zero no longo prazo), mas consumir mais e poupar menos encolhe o capital e empobrece o país de forma permanente. Mostra o paradoxo "boom hoje, mais pobre amanhã" e o trade-off da austeridade.
-
-**Sobre os dados** — todas as séries SGS usadas, com código e fonte.
-
-## Fonte dos dados
-
-- **API SGS do Banco Central** (`api.bcb.gov.br`) — acesso público, sem chave, com CORS liberado.
-- Séries: IPCA 12m (13522), IPCA mês (433), Meta Selic (432), câmbio (3698), dívida/PIB (13762), desemprego PNAD (24369), IBC-Br (24364), base monetária (1785), IGP-DI histórico (190).
-- Estratégia **ao vivo com backup offline**: o site tenta buscar cada série atualizada; se falhar, usa o retrato embutido no próprio arquivo. Botão *Atualizar* rebusca.
+Estratégia **ao vivo com backup offline**: busca as séries atualizadas; se falhar, usa o retrato embutido no arquivo. Para atualizar o snapshot, rode `fetch_solow.py` e substitua o bloco de dados no `index.html`.
 
 ## Como usar
 
-**Fácil:** abra o link do GitHub Pages (após publicar).
-
-**Offline:** baixe o repositório (*Code → Download ZIP*), descompacte e dê dois cliques em `index.html`. Funciona sem internet com o último snapshot; com internet, atualiza sozinho.
+**Fácil:** abra o link acima. **Offline:** baixe o ZIP (*Code → Download ZIP*) e dê dois cliques em `index.html`.
 
 ## Publicar
 
-`push` na branch `main` — o workflow em `.github/workflows/pages.yml` publica sozinho. Em *Settings → Pages*, defina a origem como **GitHub Actions**.
-
-## Atualizar o snapshot offline
-
-O snapshot embutido é só um retrato de segurança. Para atualizá-lo, rode o script `fetch_br.py` (baixa as séries do BCB e gera o JSON) e substitua o bloco de dados no `index.html`. O site sempre prefere o dado ao vivo quando há internet.
+`push` na `main` — o workflow em `.github/workflows/pages.yml` publica sozinho.
 
 ---
 
-Material educativo — não é recomendação de investimento. Projeto irmão da [simulação teórica de curto/médio/longo prazo](https://github.com/matheusassiso/simulacao-curto-medio-longo-prazo).
+Material educativo — não é recomendação de investimento. A versão anterior (dashboard com vários painéis: IS-LM-BP, Phillips, hiperinflação etc.) está preservada no histórico do git. Projeto irmão: [simulação teórica de curto/médio/longo prazo](https://github.com/matheusassiso/simulacao-curto-medio-longo-prazo).
