@@ -2,7 +2,11 @@
 
 Página única que roda o **modelo de Solow calibrado com o investimento real do Brasil**. A taxa de poupança/investimento (`s`) vem da **Formação Bruta de Capital Fixo** publicada pelo Banco Central, puxada ao vivo (com backup offline).
 
-### ▶ Abrir agora: **https://matheusassiso.github.io/economia-brasil-modelos/**
+## Abrir o HTML no navegador
+
+[Baixe o ZIP do repositório](https://github.com/matheusassiso/economia-brasil-modelos/archive/refs/heads/main.zip), extraia o conteúdo e abra [`index.html`](index.html) no navegador.
+
+O modelo usa os dados embutidos se a consulta ao Banco Central falhar.
 
 ## O que faz
 
@@ -25,14 +29,6 @@ O BCB **não publica a razão FBCF/PIB** como série pronta no SGS — só o ín
 | Atividade / crescimento real (IBC-Br) | 24364 |
 
 Estratégia **ao vivo com backup offline**: busca as séries atualizadas; se falhar, usa o retrato embutido no arquivo. Para atualizar o snapshot, rode `fetch_solow.py` e substitua o bloco de dados no `index.html`.
-
-## Como usar
-
-**Fácil:** abra o link acima. **Offline:** baixe o ZIP (*Code → Download ZIP*) e dê dois cliques em `index.html`.
-
-## Publicar
-
-`push` na `main` — o workflow em `.github/workflows/pages.yml` publica sozinho.
 
 ---
 
